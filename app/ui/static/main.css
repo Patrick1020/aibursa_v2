@@ -1,0 +1,8 @@
+:root { font-family: system-ui, Segoe UI, Roboto, Arial; }
+.container { max-width: 980px; margin: 2rem auto; padding: 0 1rem; }
+form { display: flex; gap: .5rem; margin-bottom: 1rem; }
+input { padding: .5rem .7rem; }
+button { padding: .5rem .9rem; cursor:pointer; }
+table { width:100%; border-collapse: collapse; }
+th, td { border-bottom: 1px solid #ddd; padding: .5rem; text-align: left; }
+thead th { background: #f5f7fb; position: sticky; top: 0; }

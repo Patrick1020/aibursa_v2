@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+
+# Venv & tools
+.venv/
+.envrc
+.pyenv/
+pip-wheel-metadata/
+.cache/
+
+# Editors/OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# App artifacts
+*.db
+app.log
+logs/
+data_cache/
+models/
+models_store/
+news_history.json
+static/bt_*
+
+# Secrets (folosește .env.example în loc)
+.env

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>{{ app_name }}</title>
+  <link rel="stylesheet" href="/static/main.css"/>
+  <script>
+    async function addPrediction(e) {
+      e.preventDefault();
+      const ticker = document.getElementById("ticker").value;
+      const horizon = parseInt(document.getElementById("horizon").value || "7");
+      const resp = await fetch("/api/predictions", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ticker, horizon_days: horizon})
+      });
+      if (!resp.ok) { alert("Request failed"); return; }
+      await loadTable();
+      e.target.reset();
+    }
+    async function loadTable() {
+      const r = await fetch("/api/predictions");
+      const data = await r.json();
+      const tbody = document.querySelector("#tbl tbody");
+      tbody.innerHTML = "";
+      for (const p of data) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${p.id}</td>
+          <td>${p.ticker}</td>
+          <td>${p.horizon_days}</td>
+          <td>${p.expected_change_pct}</td>
+          <td>${p.probability_pct}</td>
+          <td>${p.outcome}</td>
+          <td>${p.reward_to_risk}</td>
+          <td>${p.created_at}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+    window.addEventListener("load", loadTable);
+  </script>
+</head>
+<body>
+  <main class="container">
+    <h1>{{ app_name }}</h1>
+    <form onsubmit="addPrediction(event)">
+      <input id="ticker" placeholder="Ticker (ex: AAPL)" required/>
+      <input id="horizon" type="number" min="1" max="90" value="7"/>
+      <button type="submit">Predict</button>
+    </form>
+
+    <table id="tbl">
+      <thead>
+        <tr>
+          <th>ID</th><th>Ticker</th><th>Horizon</th><th>Exp. %</th>
+          <th>Prob. %</th><th>Outcome</th><th>R:R</th><th>Created</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </main>
+</body>
+</html>
