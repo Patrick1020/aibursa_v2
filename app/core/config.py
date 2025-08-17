@@ -2,6 +2,9 @@ from __future__ import annotations
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
+        # Logging
+    log_level: str = "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+
     # App
     app_name: str = "AI Stock Predictor v2"
     debug: bool = False
