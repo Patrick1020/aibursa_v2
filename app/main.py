@@ -22,6 +22,19 @@ app = FastAPI(title=settings.app_name)
 app.mount("/static", StaticFiles(directory="app/ui/static"), name="static")
 templates = Jinja2Templates(directory="app/ui/templates")
 
+from fastapi.responses import JSONResponse
+from fastapi import Request
+
+@app.exception_handler(Exception)
+async def unhandled_exc(request: Request, exc: Exception):
+    # Pentru rutele HTML vrem pagina standard de eroare; limităm handlerul la /api/*
+    if request.url.path.startswith("/api/"):
+        # în dev poți include str(exc) dacă vrei mai mult context
+        return JSONResponse(status_code=500, content={"ok": False, "error": "Internal Server Error"})
+    # altfel, lasă FastAPI/Starlette să afișeze pagina HTML
+    raise exc
+
+
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request, "app_name": settings.app_name})

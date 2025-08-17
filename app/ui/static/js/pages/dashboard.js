@@ -1,6 +1,8 @@
 import { fmt, qs, qsa } from "../core/utils.js";
 import { getPredictions, createPrediction, getQuotes } from "../core/api.js";
 import { toast } from "../components/toast.js";
+import { openDetails } from "../components/details.js";
+
 
 /* ---------- PERSIST PREFS ---------- */
 const PREFS_KEY = "dashPrefs_v1";
@@ -142,7 +144,7 @@ function renderTable() {
       <td><span class="badge badge-rr">${Number(p.reward_to_risk).toFixed(2)}</span></td>
       <td><span class="${sig.cls} badge">${sig.t}</span></td>
       <td class="muted">${fmt.date(p.created_at)}</td>
-      <td class="text-center"><a class="link" href="#">Details</a></td>
+      <td class="text-center"><a class="link details-link" href="#" data-ticker="${p.ticker}">Details</a></td>
     `;
     tb.appendChild(tr);
   }
@@ -150,6 +152,16 @@ function renderTable() {
   updateSortARIA();
   persistNow();
 }
+
+  // Bind “Details” links
+  qsa(".details-link").forEach(a => {
+    a.addEventListener("click", (ev) => {
+      ev.preventDefault();
+      const t = a.getAttribute("data-ticker");
+      if (t) openDetails(t);
+    });
+  });
+
 
 /* ---------- DATA FLOW ---------- */
 async function refreshAll() {

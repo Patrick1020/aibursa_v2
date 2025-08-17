@@ -34,3 +34,4 @@ static/bt_*
 
 # Secrets (folosește .env.example în loc)
 .env
+*.pyc

@@ -1,26 +1,37 @@
 from __future__ import annotations
-from typing import List, Dict
+from typing import List, Optional
 from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
 from app.services.market_data import get_quotes, get_history
 
 router = APIRouter(prefix="/api/market", tags=["market"])
 
+class QuoteOut(BaseModel):
+    ticker: str
+    price: Optional[float] = None
+
 class QuotesResponse(BaseModel):
-    quotes: List[Dict[str, float | None]]
+    quotes: List[QuoteOut]
 
 @router.get("/quotes", response_model=QuotesResponse)
 def quotes(tickers: str = Query(..., description="Comma-separated symbols, ex: AAPL,MSFT,TSLA")):
     syms = [s.strip().upper() for s in tickers.split(",") if s.strip()]
     data = get_quotes(syms)
-    # returnăm fix forma așteptată de UI: {quotes:[{ticker, price}]}
     return {"quotes": [{"ticker": k, "price": v} for k, v in data.items()]}
+
+class CandleOut(BaseModel):
+    date: str
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: float
 
 class HistoryResponse(BaseModel):
     ticker: str
     period: str = Field(..., description="ex: 1mo, 3mo, 6mo, 1y, 2y, 5y, max")
     interval: str = Field(..., description="ex: 1d, 1h, 30m, 15m, 5m, 1m")
-    candles: List[Dict]
+    candles: List[CandleOut]
 
 @router.get("/history", response_model=HistoryResponse)
 def history(
