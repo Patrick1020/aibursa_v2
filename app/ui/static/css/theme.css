@@ -1,0 +1,111 @@
+/* CSS variables + themes (dark/light) */
+:root {
+  --font-sans: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  --container-max: 1600px; /* mărește aici cât vrei: 1440–1600px e sweet spot */
+
+  --bg: #0b1220;
+  --surface: #0f172a;
+  --surface-2: #111827;
+  --line: #1e293b;
+  --text: #e5e7eb;
+  --muted: #94a3b8;
+
+  --primary-1: #5f85ff; /* top gradient */
+  --primary-2: #2b54d7; /* bottom gradient */
+  --primary: #2b54d7;
+  --primary-soft: rgba(43,84,215,.12);
+
+  --success-1: #0b3d25; --success-2: #0f5a34; --success: #22c55e;
+  --warn-1: #3c2b07; --warn-2: #5d430c; --warn: #fde68a;
+  --danger-1: #4a0d0d; --danger-2: #6d1515; --danger: #ef4444;
+
+  --accent-blue: #59caff;
+
+  --track: #0b1220;
+  --shadow-strong: 0 16px 60px rgba(2,8,23,.45);
+  --shadow: 0 8px 24px rgba(2,8,23,.35);
+}
+
+.light {
+  --bg: #f6f7fb;
+  --surface: #ffffff;
+  --surface-2: #f3f4f6;
+  --line: #e5e7eb;
+  --text: #0f172a;
+  --muted: #475569;
+
+  --primary-1: #7aa2ff;
+  --primary-2: #3b6fff;
+  --primary: #3b6fff;
+  --primary-soft: rgba(59,111,255,.08);
+
+  --success-1: #e3faf6; --success-2: #b6f2df; --success: #17b892;
+  --warn-1: #faf8e6; --warn-2: #efe5b2; --warn: #d6b41f;
+  --danger-1: #ffebee; --danger-2: #ffd0d6; --danger: #e11d48;
+
+  --accent-blue: #2176ff;
+  --track: #eef2ff;
+  --shadow-strong: 0 16px 60px rgba(4,10,24,.12);
+  --shadow: 0 8px 24px rgba(4,10,24,.08);
+}
+
+/* Color utility aliases */
+body { font-family: var(--font-sans); letter-spacing: .005em; }
+.bg-var { background: var(--bg); }
+.surface { background: var(--surface); }
+.surface-2 { background: var(--surface-2); }
+.surface-text { color: var(--text); }
+.muted { color: var(--muted); }
+
+/* Fluid container – mai lat pe ecrane mari, cu margin de siguranță */
+.container {
+  width: min(var(--container-max), calc(100vw - 48px));
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+
+.app-header {
+  position: sticky; top: 0; z-index: 40;
+  backdrop-filter: blur(6px);
+  background: color-mix(in_oklab, var(--bg), transparent 18%);
+  border-bottom: 1px solid var(--line);
+}
+.header-inner { display:flex; align-items:center; justify-content:space-between; padding: .8rem 0; }
+.brand { display:flex; align-items:center; gap:.6rem; }
+.logo-dot { width: 36px; height: 36px; border-radius: 14px; background: var(--primary); box-shadow: 0 0 0 4px rgba(59,111,255,.18); }
+.brand-title { color: var(--accent-blue); text-decoration:none; font-weight: 800; letter-spacing:.2px; font-size: 1.1rem; }
+.header-actions { display:flex; align-items:center; gap:.6rem; }
+
+.py-6 { padding-block: 1.5rem; }
+.mb-4 { margin-bottom: 1rem; }
+.page-title { font-weight: 700; font-size: 1.2rem; color: var(--text); }
+
+.toolbar { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom: 1rem; }
+.toolbar-left, .toolbar-right { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+
+/* KPI grid responsiv: 1 → 2 → 3 → 4 coloane */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* ≤ 1024px → 2 coloane */
+@media (max-width: 1024px) {
+  .kpi-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+
+/* ≤ 640px → 1 coloană */
+@media (max-width: 640px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+}
+
+/* ≥ 1536px (2XL) → 4 coloane */
+@media (min-width: 1536px) {
+  .kpi-grid { grid-template-columns: repeat(4, minmax(0,1fr)); }
+}
+
+.table-surface { background: linear-gradient(180deg, var(--surface), color-mix(in_oklab,var(--surface-2),transparent 10%)); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); }
+.table-scroll { overflow:auto; border-radius: 18px; }

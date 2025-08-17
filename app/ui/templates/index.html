@@ -1,65 +1,117 @@
-<!DOCTYPE html>
-<html lang="ro">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>{{ app_name }}</title>
-  <link rel="stylesheet" href="/static/main.css"/>
-  <script>
-    async function addPrediction(e) {
-      e.preventDefault();
-      const ticker = document.getElementById("ticker").value;
-      const horizon = parseInt(document.getElementById("horizon").value || "7");
-      const resp = await fetch("/api/predictions", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ticker, horizon_days: horizon})
-      });
-      if (!resp.ok) { alert("Request failed"); return; }
-      await loadTable();
-      e.target.reset();
-    }
-    async function loadTable() {
-      const r = await fetch("/api/predictions");
-      const data = await r.json();
-      const tbody = document.querySelector("#tbl tbody");
-      tbody.innerHTML = "";
-      for (const p of data) {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${p.id}</td>
-          <td>${p.ticker}</td>
-          <td>${p.horizon_days}</td>
-          <td>${p.expected_change_pct}</td>
-          <td>${p.probability_pct}</td>
-          <td>${p.outcome}</td>
-          <td>${p.reward_to_risk}</td>
-          <td>${p.created_at}</td>
-        `;
-        tbody.appendChild(tr);
-      }
-    }
-    window.addEventListener("load", loadTable);
-  </script>
-</head>
-<body>
-  <main class="container">
-    <h1>{{ app_name }}</h1>
-    <form onsubmit="addPrediction(event)">
-      <input id="ticker" placeholder="Ticker (ex: AAPL)" required/>
-      <input id="horizon" type="number" min="1" max="90" value="7"/>
-      <button type="submit">Predict</button>
-    </form>
+{% extends "base.html" %}
+{% block content %}
 
-    <table id="tbl">
+<!-- Toolbar Top -->
+<section class="toolbar">
+  <div class="toolbar-left">
+    <div class="input-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" aria-hidden="true"
+           viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input id="searchSymbol" class="input" placeholder="Search symbol..." aria-label="Search symbol"/>
+    </div>
+    <button id="btnSearch" class="btn btn-primary">Search</button>
+  </div>
+  <div class="toolbar-right">
+    <button id="btnDashboard" class="btn btn-soft">Vezi Dashboard</button>
+    <button id="btnRefresh" class="btn btn-soft btn-icon gap">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"
+           viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+        <path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10M1 14l5.36 4.36A9 9 0 0 0 20.49 15"/>
+      </svg>
+      Refresh All
+    </button>
+  </div>
+</section>
+
+<!-- KPIs -->
+<section class="kpi-grid">
+  <div class="card">
+    <div class="kpi-label">Total Predictions</div>
+    <div id="kpi-total" class="kpi-value">-</div>
+  </div>
+  <div class="card">
+    <div class="kpi-label">Avg. Probability</div>
+    <div id="kpi-prob" class="kpi-value">-</div>
+  </div>
+  <div class="card">
+    <div class="kpi-label">Avg. Reward/Risk</div>
+    <div id="kpi-rr" class="kpi-value">-</div>
+  </div>
+  <div class="card">
+    <div class="kpi-label">Signals</div>
+    <div class="chips">
+      <span id="kpi-buy"  class="chip chip-buy">Buy: 0</span>
+      <span id="kpi-hold" class="chip chip-hold">Hold: 0</span>
+      <span id="kpi-sell" class="chip chip-sell">Sell: 0</span>
+    </div>
+  </div>
+</section>
+
+
+<!-- Quick add -->
+<section class="quick-add">
+  <div class="quick-row">
+    <input id="tickerInput" class="input w-40" placeholder="Ticker (ex: AAPL)" aria-label="Ticker (ex: AAPL)"/>
+    <input id="horizonInput" class="input w-28" type="number" min="1" max="90" value="7" placeholder="Horizon (days)" aria-label="Horizon (days)"/>
+    <button id="btnPredict" class="btn btn-gradient btn-icon gap">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="22 2 11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      Predict
+    </button>
+  </div>
+</section>
+
+<!-- Table -->
+<section class="table-surface">
+  <div class="table-scroll">
+    <table class="pro-table" role="grid" aria-label="Predictions table">
       <thead>
         <tr>
-          <th>ID</th><th>Ticker</th><th>Horizon</th><th>Exp. %</th>
-          <th>Prob. %</th><th>Outcome</th><th>R:R</th><th>Created</th>
+          <th><button class="sort-btn" data-sort="ticker"      aria-sort="none">Symbol</button></th>
+          <th><button class="sort-btn" data-sort="price"       aria-sort="none">Current Price</button></th>
+          <th><button class="sort-btn" data-sort="prediction"  aria-sort="none">Prediction (%)</button></th>
+          <th><button class="sort-btn" data-sort="estprice"    aria-sort="none">Est. Price (7 days)</button></th>
+          <th><button class="sort-btn" data-sort="probability" aria-sort="none">Probability</button></th>
+          <th><button class="sort-btn" data-sort="outcome"     aria-sort="none">Win/Loss/Breakeven</button></th>
+          <th><button class="sort-btn" data-sort="rr"          aria-sort="none">Reward/Risk</button></th>
+          <th><button class="sort-btn" data-sort="signal"      aria-sort="none">Recommendation</button></th>
+          <th><button class="sort-btn" data-sort="date"        aria-sort="none">Date</button></th>
+          <th class="text-center">Details</th>
         </tr>
       </thead>
-      <tbody></tbody>
+      <tbody id="tableBody">
+        <!-- skeleton rows (shown until data) -->
+        <tr class="skeleton"><td colspan="10"></td></tr>
+        <tr class="skeleton"><td colspan="10"></td></tr>
+        <tr class="skeleton"><td colspan="10"></td></tr>
+      </tbody>
     </table>
-  </main>
-</body>
-</html>
+  </div>
+</section>
+
+<!-- Pagination bar -->
+<section class="pager">
+  <div class="pager-left">
+    <span id="rowsInfo" class="muted">Showing 0–0 of 0</span>
+  </div>
+  <div class="pager-right">
+    <label class="muted" for="rowsPerPage">Rows:</label>
+    <select id="rowsPerPage" class="input rows-select" aria-label="Rows per page">
+      <option>10</option>
+      <option selected>15</option>
+      <option>25</option>
+      <option>50</option>
+    </select>
+    <button id="prevPage" class="btn btn-outline btn-icon" aria-label="Previous page">‹</button>
+    <span id="pageInfo" class="muted">Page 1 / 1</span>
+    <button id="nextPage" class="btn btn-outline btn-icon" aria-label="Next page">›</button>
+  </div>
+</section>
+
+
+<!-- Page script -->
+<script type="module" src="/static/js/pages/dashboard.js"></script>
+{% endblock %}

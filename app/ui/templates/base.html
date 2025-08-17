@@ -1,0 +1,70 @@
+{% set title = app_name or "Stock Predictions Dashboard" %}
+<!DOCTYPE html>
+<html lang="ro" class="h-full">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>{{ title }}</title>
+    <!-- Fonts: Manrope (clean, readable) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400..800&display=swap" rel="stylesheet">
+
+
+  <!-- Prevent FOUC: set theme ASAP -->
+  <script>
+    (function(){
+      try {
+        var t = localStorage.getItem('theme') || 'dark';
+        if (t === 'light') document.documentElement.classList.add('light');
+        else document.documentElement.classList.add('dark');
+      } catch(e){}
+    })();
+  </script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/static/css/theme.css"/>
+  <link rel="stylesheet" href="/static/css/components.css"/>
+  <link rel="stylesheet" href="/static/css/table.css"/>
+
+  <!-- Meta -->
+  <meta name="color-scheme" content="dark light">
+</head>
+<body class="min-h-screen bg-var surface-text">
+  <header class="app-header">
+    <div class="container header-inner">
+      <div class="brand">
+        <div class="logo-dot"></div>
+        <a href="/" class="brand-title">{{ title }}</a>
+      </div>
+      <nav class="header-actions" aria-label="primary">
+        <a href="/fast-trade" class="btn btn-outline btn-icon gap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 3L4 14h7l-1 7 9-11h-7l1-7z"/></svg>
+          <span>Fast Trade</span>
+        </a>
+        <button id="themeToggle" class="btn btn-ghost btn-icon" aria-pressed="false" aria-label="Toggle theme">
+          <span class="theme-label">Light Mode</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container py-6">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Toast container -->
+  <div id="toast-root" class="toast-root" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Modal root (pentru dialoguri accesibile) -->
+  <div id="modal-root" class="modal-root"></div>
+
+
+  <!-- Core JS -->
+  <script type="module" src="/static/js/core/theme.js"></script>
+  <script type="module" src="/static/js/core/utils.js"></script>
+  <script type="module" src="/static/js/core/api.js"></script>
+  <script type="module" src="/static/js/components/toast.js"></script>
+  <!-- Page-level scripts are loaded in individual templates -->
+</body>
+</html>

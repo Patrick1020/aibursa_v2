@@ -1,16 +1,37 @@
-from pydantic_settings import BaseSettings
-from pydantic import Field
+from __future__ import annotations
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    app_env: str = Field("dev", alias="APP_ENV")
-    app_name: str = Field("AI Stock Predictor v2", alias="APP_NAME")
-    sqlalchemy_database_uri: str = Field("sqlite:///./aibursa_v2.db", alias="SQLALCHEMY_DATABASE_URI")
-    log_level: str = Field("INFO", alias="LOG_LEVEL")
+    # Logging
+    log_level: str = "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
 
-    model_config = {
-        "env_file": ".env",
-        "env_file_encoding": "utf-8",
-        "extra": "ignore",
-    }
+    # Database
+    database_url: str = "sqlite:///./data/app.db"
+
+    @property
+    def sqlalchemy_database_uri(self) -> str:
+        # Alias compatibil cu codul vechi
+        return self.database_url
+
+    # App
+    app_name: str = "AI Stock Predictor v2"
+    debug: bool = False
+
+    # Market providers
+    alpha_vantage_api_key: str | None = None
+    market_provider_order: str = "yahoo,alpha_vantage"
+    market_cache_ttl_seconds: int = 5
+
+    # CORS
+    cors_origins: str | None = None  # ex: "http://127.0.0.1:8000,http://localhost:8000"
+
+    # Security
+    secret_key: str | None = None
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+    )
 
 settings = Settings()
