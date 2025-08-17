@@ -1,0 +1,97 @@
+from __future__ import annotations
+import os, json
+from dataclasses import dataclass
+import numpy as np
+import pandas as pd
+from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor
+from sklearn.calibration import CalibratedClassifierCV
+from sklearn.metrics import accuracy_score, roc_auc_score, brier_score_loss, mean_absolute_error, mean_squared_error
+from joblib import dump
+from app.ml.features.indicators import add_indicators
+
+ART_DIR = "app/ml/artifacts"
+
+@dataclass
+class TrainConfig:
+    ticker: str
+    horizon_days: int = 7
+    direction_threshold: float = 0.0  # 0 => doar direcție up/down
+    test_ratio: float = 0.15
+    val_ratio: float = 0.15
+    random_state: int = 42
+
+def _ensure_dirs():
+    os.makedirs(ART_DIR, exist_ok=True)
+
+def _label_targets(df: pd.DataFrame, horizon: int, thr: float) -> pd.DataFrame:
+    df = df.copy()
+    future = df["close"].shift(-horizon)
+    ret_h = (future / df["close"] - 1.0) * 100.0
+    df["y_reg"] = ret_h
+    df["y_cls"] = (ret_h > thr).astype(int)
+    return df.dropna().reset_index(drop=True)
+
+def _time_splits(n: int, val_ratio: float, test_ratio: float):
+    test_start = int(n * (1 - test_ratio))
+    val_start  = int(test_start * (1 - val_ratio))
+    return slice(0, val_start), slice(val_start, test_start), slice(test_start, n)
+
+def _prep_xy(df: pd.DataFrame):
+    features = [c for c in df.columns if c not in ("date","open","high","low","close","volume","y_reg","y_cls")]
+    X = df[features].values
+    y_cls = df["y_cls"].values
+    y_reg = df["y_reg"].values
+    return X, y_cls, y_reg, features
+
+def train_on_dataframe(df_raw: pd.DataFrame, cfg: TrainConfig):
+    _ensure_dirs()
+    df = add_indicators(df_raw)
+    df = _label_targets(df, cfg.horizon_days, cfg.direction_threshold)
+    X, y_cls, y_reg, features = _prep_xy(df)
+
+    tr, va, te = _time_splits(len(df), cfg.val_ratio, cfg.test_ratio)
+    Xtr, ytr_c, ytr_r = X[tr], y_cls[tr], y_reg[tr]
+    Xva, yva_c, yva_r = X[va], y_cls[va], y_reg[va]
+    Xte, yte_c, yte_r = X[te], y_cls[te], y_reg[te]
+
+    # Clasificare (direcție)
+    base_cls = GradientBoostingClassifier(random_state=cfg.random_state)
+    base_cls.fit(Xtr, ytr_c)
+    # calibrare probabilități (mai corect pentru „probability_pct”)
+    cls = CalibratedClassifierCV(base_cls, method="isotonic", cv="prefit")
+    cls.fit(Xva, yva_c)
+
+    # Regresie (magnitudine %)
+    reg = GradientBoostingRegressor(random_state=cfg.random_state)
+    reg.fit(Xtr, ytr_r)
+
+    # Metrics
+    proba_te = cls.predict_proba(Xte)[:,1]
+    pred_cls_te = (proba_te >= 0.5).astype(int)
+    acc = float(accuracy_score(yte_c, pred_cls_te))
+    try:
+      auc = float(roc_auc_score(yte_c, proba_te))
+    except Exception:
+      auc = float("nan")
+    brier = float(brier_score_loss(yte_c, proba_te))
+
+    yhat_r = reg.predict(Xte)
+    mae = float(mean_absolute_error(yte_r, yhat_r))
+    rmse = float(mean_squared_error(yte_r, yhat_r, squared=False))
+
+    metrics = {
+        "ticker": cfg.ticker, "horizon_days": cfg.horizon_days,
+        "cls": {"accuracy": acc, "auc": auc, "brier": brier},
+        "reg": {"mae": mae, "rmse": rmse},
+        "n_train": int(len(Xtr)), "n_val": int(len(Xva)), "n_test": int(len(Xte)),
+        "features": features,
+    }
+
+    # Save artifacts
+    model_tag = f"{cfg.ticker.upper()}_{cfg.horizon_days}d"
+    dump(cls, os.path.join(ART_DIR, f"cls_{model_tag}.joblib"))
+    dump(reg, os.path.join(ART_DIR, f"reg_{model_tag}.joblib"))
+    with open(os.path.join(ART_DIR, f"metrics_{model_tag}.json"), "w") as f:
+        json.dump(metrics, f, indent=2)
+
+    return metrics

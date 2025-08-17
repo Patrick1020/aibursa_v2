@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="toolbar">
+  <div class="toolbar-left">
+    <h2 class="page-title">Fast Trade</h2>
+  </div>
+  <div class="toolbar-right">
+    <button id="ftStart" class="btn btn-gradient">Start (5s)</button>
+    <button id="ftStop" class="btn btn-outline">Stop</button>
+  </div>
+</section>
+
+<p class="muted mb-4">
+  Live polling demo pe predicțiile existente + cotații stub. Vom conecta ulterior NASDAQ-100/eToro feed.
+</p>
+
+<section class="table-surface">
+  <div class="table-scroll">
+    <table class="pro-table" role="grid" aria-label="Fast-trade table">
+      <thead>
+      <tr>
+        <th>Symbol</th>
+        <th>Price</th>
+        <th>Prediction (%)</th>
+        <th>Probability</th>
+        <th>Win/Loss/Breakeven</th>
+        <th>R:R</th>
+        <th>Signal</th>
+        <th>Updated</th>
+      </tr>
+      </thead>
+      <tbody id="ftBody">
+        <tr class="skeleton"><td colspan="8"></td></tr>
+        <tr class="skeleton"><td colspan="8"></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<script type="module" src="/static/js/pages/fasttrade.js"></script>
+{% endblock %}
