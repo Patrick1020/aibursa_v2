@@ -6,7 +6,7 @@ __pycache__/
 *.egg-info/
 .eggs/
 
-# Venv & tools
+# Virtual env & tools
 .venv/
 .envrc
 .pyenv/
