@@ -1,6 +1,6 @@
-﻿=== Repo Manifest 2025-08-19T05:15:48 ===
+﻿=== Repo Manifest 2025-08-19T05:18:02 ===
 branch: main
-commit: 933f30b
+commit: 4cde549
 
 --- GIT STATUS ---
  M repo_manifest.txt
@@ -17660,3 +17660,3880 @@ C:.
         
 
 --- FILE PREVIEWS (first 1000 lines) ---
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\.env [size: 2.05 KB] -----
+# ===================== APP =====================
+APP_NAME=AI Stock Predictor v2
+# DEBUG=true/false (opțional; dacă nu îl pui, rămâne default din cod)
+DEBUG=true
+LOG_LEVEL=INFO
+
+# ===================== MARKET PROVIDERS =====================
+# Ordinea furnizorilor reali (fallback): yahoo, alpha_vantage
+MARKET_PROVIDER_ORDER=yahoo,alpha_vantage
+
+# Cheie Alpha Vantage (opțional, necesară pentru intraday extins / fallback)
+ALPHA_VANTAGE_API_KEY=67US0N2T2C2G7HK7
+
+# TTL cache (secunde) pentru quotes live (reduce trafic & flicker în UI)
+MARKET_CACHE_TTL_SECONDS=5
+
+# ===================== DATABASE (exemplu) =====================
+# Dacă folosești Postgres, comentează SQLite și decomentează linia Postgres
+DATABASE_URL=sqlite:///./data/app.db
+# DATABASE_URL=postgresql+psycopg2://user:parola@localhost:5432/aibursa_v2
+
+# ===================== CORS (opțional) =====================
+# Liste separate prin virgulă, fără spații
+CORS_ORIGINS=http://127.0.0.1:8000,http://localhost:8000
+
+# ===================== SECURITY (opțional) =====================
+# Folosit de FastAPI pentru semnarea cookie/jwt (nu-l publica NICIODATĂ)
+SECRET_KEY=secretpentruaibursa
+
+# ===================== UNIVERSE =====================
+# 100 tickere fixe (exemplu — înlocuiește cu ce vrei tu)
+UNIVERSE_FIXED=AAPL,MSFT,GOOGL,AMZN,META,TSLA,NVDA,AVGO,AMD,COST,PEP,KO,JNJ,XOM,PG,HD,UNH,LLY,ABBV,ORCL,CRM,ADBE,INTC,CSCO,TXN,QCOM,NFLX,AMAT,LIN,V,PYPL,MA,WMT,TMO,NKE,PFE,MCD,UPS,BAC,JPM,C,MS,GS,BLK,SPGI,BRK.B,UNP,CAT,DE,BA,GE,IBM,SBUX,LOW,T,TMUS,VZ,PLTR,SNOW,SHOP,UBER,ABNB,INTU,ADP,ISRG,MDT,VRTX,NOW,ASML,TSM,NVO,AZN,RIVN,F,GM,LCID,BYDDF,NIO,BABA,JD,PDD,TCEHY,TWTR,DIS,NKE,EA,ATVI,TTWO,ROKU,SPOT,SNAP,PINS,ETSY,CRWD,ZS,NET,PANW,OKTA,DDOG,MDB
+# CSV cu întreaga listă de pe eToro (coloană 'ticker', o valoare pe linie)
+UNIVERSE_RANDOM_POOL_PATH=data/etoro_universe.csv
+# câte simboluri aleatorii să adăugăm în fiecare zi
+UNIVERSE_RANDOM_DAILY_COUNT=100
+# seed fix (opțional). Dacă e gol, folosim YYYYMMDD ca seed (determinist per zi)
+UNIVERSE_RANDOM_SEED=20250819
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\.env.example [size: 0.5 KB] -----
+# Cheie Alpha Vantage (opțională, pentru fallback / intraday complet)
+ALPHA_VANTAGE_API_KEY=schimba-cu-cheia-ta
+
+# Ordinea providerilor (fallback). Valori suportate: yahoo, alpha_vantage
+MARKET_PROVIDER_ORDER=yahoo,alpha_vantage
+
+# TTL cache (secunde) pentru quotes (reduce traficul/flicker)
+MARKET_CACHE_TTL_SECONDS=5
+
+
+APP_ENV=dev
+APP_NAME=AI Stock Predictor v2
+SQLALCHEMY_DATABASE_URI=sqlite:///./aibursa_v2.db
+LOG_LEVEL=INFO
+
+# Chei externe (exemple)
+ALPHAVANTAGE_API_KEY=REPLACE_ME
+NEWS_API_KEY=REPLACE_ME
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\.github\workflows\ci.yml [size: 0.72 KB] -----
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps (if present)
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install pytest || true
+
+      - name: Run tests (if any)
+        run: |
+          if ls -1 tests/*.py 2>/dev/null; then
+            pytest -q
+          else
+            echo "No tests found, skipping."
+          fi
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\.gitignore [size: 0.42 KB] -----
+# Environment (DO NOT COMMIT)
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+
+# Virtual env & tools
+.venv/
+.envrc
+.pyenv/
+pip-wheel-metadata/
+.cache/
+
+# Editors/OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# App artifacts
+*.db
+app.log
+logs/
+data_cache/
+models/
+models_store/
+news_history.json
+static/bt_*
+
+# Secrets (folosește .env.example în loc)
+.env
+*.pyc
+repo_manifest.txt
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\aibursa_v2.db [size: 20 KB] -----
+[binary skipped]
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\api\routes\health.py [size: 0.14 KB] -----
+from fastapi import APIRouter
+
+router = APIRouter(tags=["health"])
+
+@router.get("/health")
+def health():
+    return {"status": "ok"}
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\api\routes\market.py [size: 1.43 KB] -----
+from __future__ import annotations
+from typing import List, Optional
+from fastapi import APIRouter, Query
+from pydantic import BaseModel, Field
+from app.services.market_data import get_quotes, get_history
+
+router = APIRouter(prefix="/api/market", tags=["market"])
+
+class QuoteOut(BaseModel):
+    ticker: str
+    price: Optional[float] = None
+
+class QuotesResponse(BaseModel):
+    quotes: List[QuoteOut]
+
+@router.get("/quotes", response_model=QuotesResponse)
+def quotes(tickers: str = Query(..., description="Comma-separated symbols, ex: AAPL,MSFT,TSLA")):
+    syms = [s.strip().upper() for s in tickers.split(",") if s.strip()]
+    data = get_quotes(syms)
+    return {"quotes": [{"ticker": k, "price": v} for k, v in data.items()]}
+
+class CandleOut(BaseModel):
+    date: str
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: float
+
+class HistoryResponse(BaseModel):
+    ticker: str
+    period: str = Field(..., description="ex: 1mo, 3mo, 6mo, 1y, 2y, 5y, max")
+    interval: str = Field(..., description="ex: 1d, 1h, 30m, 15m, 5m, 1m")
+    candles: List[CandleOut]
+
+@router.get("/history", response_model=HistoryResponse)
+def history(
+    ticker: str = Query(..., description="Symbol, ex: AAPL"),
+    period: str = Query("1y"),
+    interval: str = Query("1d"),
+):
+    return {"ticker": ticker.upper(), "period": period, "interval": interval, "candles": get_history(ticker, period, interval)}
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\api\routes\ml.py [size: 1.58 KB] -----
+from __future__ import annotations
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, Field
+import pandas as pd
+
+from app.ml.pipeline.train_baseline import TrainConfig, train_on_dataframe
+from app.ml.pipeline.infer_service import predict_from_candles
+from app.ml.data.synth import synth_candles
+
+router = APIRouter(prefix="/api/ml", tags=["ml"])
+
+class TrainRequest(BaseModel):
+    ticker: str = Field(..., example="AAPL")
+    horizon_days: int = Field(7, ge=2, le=30)
+    use_synth: bool = Field(True, description="Folosește date sintetice demo până conectăm providerul real.")
+
+@router.post("/train")
+def train(req: TrainRequest):
+    # TODO: înlocuiește synth_candles cu provider real (Yahoo/AlphaVantage)
+    df = synth_candles(n=900, seed=11)
+    metrics = train_on_dataframe(df, TrainConfig(ticker=req.ticker, horizon_days=req.horizon_days))
+    return {"ok": True, "metrics": metrics}
+
+class PredictRequest(BaseModel):
+    ticker: str
+    horizon_days: int = Field(7, ge=2, le=30)
+
+@router.post("/predict")
+def predict(req: PredictRequest):
+    # pentru demo folosim ultimele N lumânări sintetice; în producție: ultimele lumânări din provider.
+    df = synth_candles(n=1200, seed=13)
+    try:
+        out = predict_from_candles(req.ticker, req.horizon_days, df)
+        return {"ok": True, "prediction": out}
+    except FileNotFoundError:
+        raise HTTPException(status_code=400, detail="Modelul nu există. Rulează /api/ml/train mai întâi.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\api\routes\predictions.py [size: 5.17 KB] -----
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi import Path, Query
+from typing import List, Optional
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
+
+from app.db.session import get_db
+from app.services.market_data import get_history, get_quotes
+from app.services.ml_integration import ensure_model_and_predict
+from app.db.session import SessionLocal
+from app.models.prediction import StockPrediction
+from app.schemas.prediction import PredictionIn, PredictionOut
+from app.services.prediction_engine import PredictionEngine
+
+router = APIRouter(prefix="/api/predictions", tags=["predictions"])
+
+class CandleOut(BaseModel):
+    date: str
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: float
+
+class PredictionRowOut(BaseModel):
+    id: int
+    ticker: str
+    horizon_days: int
+    probability_pct: float
+    expected_change_pct: float
+    reward_to_risk: float
+    outcome: Optional[str] = None
+    rationale: Optional[str] = None
+    created_at: str
+
+class PredictionDetailsResponse(BaseModel):
+    ticker: str
+    last_price: Optional[float] = None
+    period: str = Field(..., description="ex: 3mo, 6mo, 1y, 2y, 5y, max")
+    interval: str = Field(..., description="ex: 1d, 1h, 30m, 15m, 5m, 1m")
+    prediction: Optional[PredictionRowOut] = None
+    previous: List[PredictionRowOut] = []
+    candles: List[CandleOut] = []
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+engine = PredictionEngine()
+
+@router.post("", response_model=PredictionOut)
+def create_prediction(payload: PredictionIn, db: Session = Depends(get_db)):
+    # Normalizăm input-ul
+    ticker = payload.ticker.upper()
+    horizon_days = payload.horizon_days
+
+    # === Predict din date reale + model ML (auto-train dacă lipsesc artefactele) ===
+    try:
+        ml = ensure_model_and_predict(ticker, horizon_days)
+        probability_pct = ml["probability_pct"]
+        expected_change_pct = ml["expected_change_pct"]
+        reward_to_risk = ml["reward_to_risk"]
+    except Exception as e:
+        # 502: problemă la provider/ML, nu la client
+        raise HTTPException(status_code=502, detail=f"Predict ML a eșuat: {e}")
+
+    # Outcome pentru predicție „nouă”: o ținem neutră (UI-ul o afișează ca Breakeven)
+    outcome = "breakeven"
+
+    # (opțional) un motiv scurt/explicativ pentru audit/UX
+    rationale = f"ML(v1): prob={probability_pct}%, exp={expected_change_pct}%, rr={reward_to_risk}"
+
+    obj = StockPrediction(
+        ticker=ticker,
+        horizon_days=horizon_days,
+        expected_change_pct=expected_change_pct,
+        probability_pct=probability_pct,
+        outcome=outcome,
+        reward_to_risk=reward_to_risk,
+        rationale=rationale,
+    )
+    db.add(obj)
+    db.commit()
+    db.refresh(obj)
+    return obj
+
+@router.get("/{ticker}", response_model=PredictionDetailsResponse)
+def prediction_details(
+    ticker: str = Path(..., description="Symbol, ex: AAPL"),
+    period: str = Query("3mo"),
+    interval: str = Query("1d"),
+    limit: int = Query(10, ge=1, le=200),
+    db: Session = Depends(get_db),
+):
+    t = ticker.upper()
+
+    # 1) Predicții din DB: ultima + câteva anterioare
+    #    (presupunem modelul SQLAlchemy: StockPrediction cu coloane folosite în UI)
+    q = db.query(StockPrediction).filter(StockPrediction.ticker == t).order_by(StockPrediction.created_at.desc())
+    latest = q.first()
+    prev = q.offset(1).limit(limit).all()
+
+    def row_to_out(r: StockPrediction) -> PredictionRowOut:
+        return PredictionRowOut(
+            id=int(r.id),
+            ticker=r.ticker,
+            horizon_days=int(r.horizon_days),
+            probability_pct=float(r.probability_pct),
+            expected_change_pct=float(r.expected_change_pct),
+            reward_to_risk=float(r.reward_to_risk),
+            outcome=getattr(r, "outcome", None),
+            rationale=getattr(r, "rationale", None),
+            created_at=r.created_at.isoformat() if getattr(r, "created_at", None) else "",
+        )
+
+    latest_out = row_to_out(latest) if latest else None
+    previous_out = [row_to_out(r) for r in prev]
+
+    # 2) Istoric de piață (period/interval din query)
+    try:
+        candles_js = get_history(t, period, interval)  # list[dict]
+    except Exception as e:
+        # dacă providerii dau rate-limit/eroare, continuăm totuși cu secțiunea de predicții
+        candles_js = []
+    candles_out = [CandleOut(**c) for c in candles_js]
+
+    # 3) Ultimul preț live (pentru header)
+    try:
+        qp = get_quotes([t])  # dict: {ticker: price}
+        last_price = qp.get(t)
+    except Exception:
+        last_price = None
+
+    return {
+        "ticker": t,
+        "last_price": last_price,
+        "period": period,
+        "interval": interval,
+        "prediction": latest_out,
+        "previous": previous_out,
+        "candles": candles_out,
+    }
+
+
+@router.get("", response_model=List[PredictionOut])
+def list_predictions(db: Session = Depends(get_db), limit: int = 100):
+    return db.query(StockPrediction).order_by(StockPrediction.created_at.desc()).limit(limit).all()
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\api\routes\universe.py [size: 0.91 KB] -----
+from __future__ import annotations
+from typing import List, Dict
+from datetime import datetime
+from fastapi import APIRouter, Query
+from pydantic import BaseModel, Field
+
+from app.services.universe import today_universe, _pool_list, _fixed_list
+
+router = APIRouter(prefix="/api/universe", tags=["universe"])
+
+class UniverseResponse(BaseModel):
+    date_seed: int
+    fixed: List[str]
+    random: List[str]
+    all: List[str] = Field(description="fixed + random (unique, in this order)")
+
+@router.get("/today", response_model=UniverseResponse)
+def get_today_universe():
+    return today_universe()
+
+class PoolStats(BaseModel):
+    pool_size: int
+    fixed_size: int
+    overlap: int
+
+@router.get("/pool/stats", response_model=PoolStats)
+def pool_stats():
+    pool = set(_pool_list())
+    fixed = set(_fixed_list())
+    return {"pool_size": len(pool), "fixed_size": len(fixed), "overlap": len(pool & fixed)}
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\core\config.py [size: 2.23 KB] -----
+from __future__ import annotations
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import field_validator
+
+
+class Settings(BaseSettings):
+    
+        # ----- Universe -----
+    universe_fixed: str = "AAPL,MSFT,GOOGL,AMZN,META,TSLA,NVDA,AVGO,AMD,COST,PEP,KO,JNJ,XOM,PG,HD,UNH,LLY,ABBV,ORCL,CRM,ADBE,INTC,CSCO,TXN,QCOM,NFLX,AMAT,LIN,V,PYPL,MA,WMT,TMO,NKE,PFE,MCD,UPS,BAC,JPM,C,MS,GS,BLK,SPGI,BRK.B,UNP,CAT,DE,BA,GE,IBM,SBUX,LOW,T,TMUS,VZ,PLTR,SNOW,SHOP,UBER,ABNB,INTU,ADP,ISRG,MDT,VRTX,NOW,ASML,TSM,NVO,AZN,RIVN,F,GM,LCID,BYDDF,NIO,BABA,JD,PDD,TCEHY,TWTR,DIS,NKE,EA,ATVI,TTWO,ROKU,SPOT,SNAP,PINS,ETSY,CRWD,ZS,NET,PANW,OKTA,DDOG,MDB"
+    universe_random_pool_path: str = "data/etoro_universe.csv"
+    universe_random_daily_count: int = 100
+    universe_random_seed: int | None = None
+    
+    
+    @field_validator("universe_random_seed", mode="before")
+    @classmethod
+    def _seed_empty_ok(cls, v):
+        # Acceptă '', ' ', 'None', 'null' ca „necompletat”
+        if v is None: 
+            return None
+        if isinstance(v, str) and v.strip().lower() in ("", "none", "null"):
+            return None
+        # dacă e deja int sau string numeric, îl întoarcem ca int
+        try:
+            return int(v)
+        except (TypeError, ValueError):
+            raise ValueError("UNIVERSE_RANDOM_SEED trebuie să fie întreg sau gol")
+
+
+    
+    # Logging
+    log_level: str = "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+
+    # Database
+    database_url: str = "sqlite:///./data/app.db"
+
+    @property
+    def sqlalchemy_database_uri(self) -> str:
+        # Alias compatibil cu codul vechi
+        return self.database_url
+
+    # App
+    app_name: str = "AI Stock Predictor v2"
+    debug: bool = False
+
+    # Market providers
+    alpha_vantage_api_key: str | None = None
+    market_provider_order: str = "yahoo,alpha_vantage"
+    market_cache_ttl_seconds: int = 5
+
+    # CORS
+    cors_origins: str | None = None  # ex: "http://127.0.0.1:8000,http://localhost:8000"
+
+    # Security
+    secret_key: str | None = None
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+    )
+
+settings = Settings()
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\core\logging.py [size: 1.76 KB] -----
+from __future__ import annotations
+import sys, logging
+from typing import Optional
+from loguru import logger as _logger
+from app.core.config import settings
+
+# Intercept std logging (uvicorn, fastapi) -> loguru
+class InterceptHandler(logging.Handler):
+    def emit(self, record: logging.LogRecord) -> None:
+        try:
+            level = _logger.level(record.levelname).name
+        except Exception:
+            level = "INFO"
+        frame, depth = logging.currentframe(), 2
+        while frame and frame.f_code.co_filename == logging.__file__:
+            frame = frame.f_back
+            depth += 1
+        _logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
+
+def _normalize_level(value: Optional[str]) -> str:
+    if not value:
+        return "INFO"
+    return str(value).upper()
+
+def setup_logging():
+    # clean default handlers
+    _logger.remove()
+
+    level = _normalize_level(getattr(settings, "log_level", None))
+
+    # console sink
+    _logger.add(
+        sys.stdout,
+        level=level,
+        backtrace=False,
+        diagnose=False,
+        enqueue=False,  # poți schimba pe True în producție
+        format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
+               "<level>{level: <8}</level> | "
+               "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
+               "<level>{message}</level>",
+    )
+
+    # redirect std logging to loguru
+    logging.basicConfig(handlers=[InterceptHandler()], level=logging.NOTSET)
+    for noisy in ("uvicorn", "uvicorn.access", "uvicorn.error", "asyncio", "httpx"):
+        logging.getLogger(noisy).handlers = [InterceptHandler()]
+        logging.getLogger(noisy).setLevel(level)
+
+    return _logger
+
+logger = setup_logging()
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\db\__init__.py [size: 0 KB] -----
+[empty]
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\db\base.py [size: 0.08 KB] -----
+from sqlalchemy.orm import DeclarativeBase
+
+class Base(DeclarativeBase):
+    pass
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\db\models.py [size: 0.03 KB] -----
+# TODO: models will be added here
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\db\session.py [size: 1.12 KB] -----
+from __future__ import annotations
+import os
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from app.core.config import settings
+
+# 1) Rezolvăm URL-ul din .env
+DATABASE_URL = settings.database_url  # ex: "sqlite:///./data/app.db"
+
+# 2) Dacă e SQLite, ne asigurăm că există folderul "data/"
+if DATABASE_URL.startswith("sqlite:///"):
+    # scoatem prefixul sqlite:/// și obținem calea relativă
+    sqlite_path = DATABASE_URL.replace("sqlite:///", "", 1)
+    sqlite_dir = os.path.dirname(sqlite_path)
+    if sqlite_dir and not os.path.exists(sqlite_dir):
+        os.makedirs(sqlite_dir, exist_ok=True)
+    connect_args = {"check_same_thread": False}
+else:
+    connect_args = {}
+
+# 3) Engine & Session (SQLAlchemy 2.x friendly)
+engine = create_engine(
+    DATABASE_URL,
+    connect_args=connect_args,
+    pool_pre_ping=True,
+    future=True,
+)
+
+SessionLocal = sessionmaker(
+    bind=engine,
+    autocommit=False,
+    autoflush=False,
+    future=True,
+)
+
+# 4) Dependency FastAPI
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\main.py [size: 2.03 KB] -----
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from starlette.requests import Request
+
+from app.core.config import settings
+from app.core.logging import logger
+from app.db.session import engine
+from app.db.base import Base
+
+from app.api.routes.health import router as health_router
+from app.api.routes.predictions import router as predictions_router
+from app.api.routes.market import router as market_router
+from app.api.routes.ml import router as ml_router
+from app.api.routes.universe import router as universe_router
+
+
+Base.metadata.create_all(bind=engine)
+
+app = FastAPI(title=settings.app_name)
+
+# Static & templates
+app.mount("/static", StaticFiles(directory="app/ui/static"), name="static")
+templates = Jinja2Templates(directory="app/ui/templates")
+
+from fastapi.responses import JSONResponse
+from fastapi import Request
+
+@app.exception_handler(Exception)
+async def unhandled_exc(request: Request, exc: Exception):
+    # Pentru rutele HTML vrem pagina standard de eroare; limităm handlerul la /api/*
+    if request.url.path.startswith("/api/"):
+        # în dev poți include str(exc) dacă vrei mai mult context
+        return JSONResponse(status_code=500, content={"ok": False, "error": "Internal Server Error"})
+    # altfel, lasă FastAPI/Starlette să afișeze pagina HTML
+    raise exc
+
+
+@app.get("/", response_class=HTMLResponse)
+def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request, "app_name": settings.app_name})
+
+@app.get("/fast-trade", response_class=HTMLResponse)
+def fast_trade(request: Request):
+    return templates.TemplateResponse("fasttrade.html", {"request": request, "app_name": settings.app_name})
+
+# API
+app.include_router(health_router)
+app.include_router(predictions_router)
+app.include_router(market_router)
+app.include_router(universe_router)
+app.include_router(ml_router)
+
+
+logger.info("UI loaded (enterprise layout).")
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\ml\calibration\frozen_calibrator.py [size: 2.19 KB] -----
+from __future__ import annotations
+from typing import Optional
+import numpy as np
+from joblib import dump, load
+
+from sklearn.calibration import CalibratedClassifierCV
+from sklearn.linear_model import LogisticRegression
+
+# În sklearn >= 1.6 există FrozenEstimator; pe versiuni mai vechi facem fallback.
+try:
+    from sklearn.frozen import FrozenEstimator  # scikit-learn ≥ 1.6
+    HAS_FROZEN = True
+except Exception:
+    FrozenEstimator = None  # type: ignore
+    HAS_FROZEN = False
+
+class PlattPrefit:
+    """
+    Calibrator simplu (Platt) pentru estimator *deja antrenat*.
+    Se potrivește logistică pe proba brută (prefit estimator) -> proba calibrată.
+    """
+    def __init__(self):
+        self._lr = LogisticRegression(solver="lbfgs")
+
+    def fit(self, probs_valid: np.ndarray, y_valid: np.ndarray):
+        p = np.asarray(probs_valid).reshape(-1, 1)
+        y = np.asarray(y_valid).astype(int)
+        self._lr.fit(p, y)
+        return self
+
+    def predict_proba(self, probs_raw: np.ndarray) -> np.ndarray:
+        p = np.asarray(probs_raw).reshape(-1, 1)
+        return self._lr.predict_proba(p)[:, 1]
+
+    def save(self, path: str): dump(self._lr, path)
+    @classmethod
+    def load(cls, path: str):
+        obj = cls()
+        obj._lr = load(path)
+        return obj
+
+def calibrate_prefit_estimator(estimator, X_valid, y_valid, method: str = "sigmoid"):
+    """
+    Returnează un calibrator apt pentru estimator *deja antrenat*.
+    - Dacă sklearn >=1.6: folosește CalibratedClassifierCV(FrozenEstimator(estimator)), fără cv='prefit'.
+    - Altfel: folosește PlattPrefit (logistică) pe proba brută.
+    """
+    if HAS_FROZEN:
+        # Atenție: X_valid, y_valid trebuie să fie DISJUNCTE față de datele de train ale estimatorului!
+        calib = CalibratedClassifierCV(estimator=FrozenEstimator(estimator), method=method)
+        calib.fit(X_valid, y_valid)
+        return calib
+    else:
+        # Fallback robust pentru sklearn < 1.6 (fără FrozenEstimator)
+        probs_valid = estimator.predict_proba(X_valid)[:, 1]
+        cal = PlattPrefit().fit(probs_valid, y_valid)
+        return cal  # acesta expune predict_proba(probs_raw), nu pe X!
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\ml\data\synth.py [size: 0.92 KB] -----
+from __future__ import annotations
+import numpy as np
+import pandas as pd
+
+def synth_candles(n: int = 600, seed: int = 7):
+    rng = np.random.default_rng(seed)
+    t = np.arange(n)
+    # trend + sezonal + random walk
+    trend = 0.0006 * t
+    season = 0.02 * np.sin(2*np.pi*t/90) + 0.01 * np.sin(2*np.pi*t/30)
+    walk = rng.normal(0, 0.01, size=n).cumsum()
+    price = 100 * (1 + trend + season + 0.001*walk)
+    vol = np.clip(rng.normal(1e6, 2e5, size=n), 2e5, None)
+    df = pd.DataFrame({
+        "date": pd.date_range("2018-01-01", periods=n, freq="B"),
+        "close": price,
+    })
+    df["open"] = df["close"].shift(1).fillna(df["close"])
+    df["high"] = df[["open","close"]].max(axis=1) * (1 + rng.normal(0.0015, 0.002, size=n))
+    df["low"]  = df[["open","close"]].min(axis=1) * (1 - rng.normal(0.0015, 0.002, size=n))
+    df["volume"] = vol
+    return df[["date","open","high","low","close","volume"]]
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\ml\features\indicators.py [size: 1.8 KB] -----
+from __future__ import annotations
+import numpy as np
+import pandas as pd
+
+def _ema(series: pd.Series, span: int) -> pd.Series:
+    return series.ewm(span=span, adjust=False).mean()
+
+def rsi(close: pd.Series, period: int = 14) -> pd.Series:
+    delta = close.diff()
+    up = delta.clip(lower=0)
+    down = -delta.clip(upper=0)
+    rs = _ema(up, period) / _ema(down, period)
+    return 100 - (100 / (1 + rs))
+
+def atr(high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14) -> pd.Series:
+    prev_close = close.shift(1)
+    tr = pd.concat([
+        (high - low).abs(),
+        (high - prev_close).abs(),
+        (low - prev_close).abs(),
+    ], axis=1).max(axis=1)
+    return tr.rolling(period).mean()
+
+def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Expects columns: ['date','open','high','low','close','volume'] with ascending date.
+    Returns df with extra feature columns, NaNs dropped.
+    """
+    df = df.copy()
+    df["sma_5"] = df["close"].rolling(5).mean()
+    df["sma_20"] = df["close"].rolling(20).mean()
+    df["ema_12"] = _ema(df["close"], 12)
+    df["ema_26"] = _ema(df["close"], 26)
+    df["rsi_14"] = rsi(df["close"], 14)
+    df["atr_14"] = atr(df["high"], df["low"], df["close"], 14)
+    df["ret_1d"] = df["close"].pct_change(1) * 100.0
+    df["ret_5d"] = df["close"].pct_change(5) * 100.0
+    df["vol_norm"] = (df["volume"] / (df["volume"].rolling(20).mean()+1e-9)).clip(upper=10.0)
+
+    # gaps și poziții vs medii
+    df["gap"] = (df["open"] - df["close"].shift(1)) / (df["close"].shift(1)+1e-9) * 100.0
+    df["dist_sma20"] = (df["close"] - df["sma_20"]) / (df["sma_20"] + 1e-9) * 100.0
+    df["dist_ema26"] = (df["close"] - df["ema_26"]) / (df["ema_26"] + 1e-9) * 100.0
+
+    # cleanup
+    df = df.dropna().reset_index(drop=True)
+    return df
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\ml\pipeline\infer_service.py [size: 1.69 KB] -----
+from __future__ import annotations
+import os, json
+from typing import Dict, Any
+import numpy as np
+import pandas as pd
+from joblib import load
+from app.ml.features.indicators import add_indicators
+
+ART_DIR = "app/ml/artifacts"
+
+def _tag(ticker: str, horizon_days: int) -> str:
+    return f"{ticker.upper()}_{horizon_days}d"
+
+def _load_models(ticker: str, horizon_days: int):
+    tag = _tag(ticker, horizon_days)
+    cls = load(os.path.join(ART_DIR, f"cls_{tag}.joblib"))
+    reg = load(os.path.join(ART_DIR, f"reg_{tag}.joblib"))
+    return cls, reg
+
+def predict_from_candles(ticker: str, horizon_days: int, candles: pd.DataFrame) -> Dict[str, Any]:
+    """
+    candles columns: ['date','open','high','low','close','volume'] ascending by date
+    """
+    if candles is None or len(candles) < 40:
+        raise ValueError("Not enough candles (min 40).")
+
+    cls, reg = _load_models(ticker, horizon_days)
+    feat = add_indicators(candles).tail(1)  # last row
+    X = feat.drop(columns=["date","open","high","low","close","volume"], errors="ignore").values
+    proba = float(cls.predict_proba(X)[:,1][0])   # P(up)
+    exp_change = float(reg.predict(X)[0])         # % change over horizon
+
+    # Simplă estimare R:R din distribuția regresiei (proxy): raport față de ATR
+    atr = float(feat["atr_14"].iloc[0])
+    price = float(feat["close"].iloc[0])
+    rr = float(max(0.1, abs(exp_change)) / (atr/price*100 + 1e-6))  # ad-hoc, îl rafinăm ulterior
+
+    return {
+        "ticker": ticker.upper(),
+        "horizon_days": horizon_days,
+        "probability_pct": round(proba * 100, 2),
+        "expected_change_pct": round(exp_change, 2),
+        "reward_to_risk": round(rr, 2),
+    }
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\ml\pipeline\train_baseline.py [size: 3.61 KB] -----
+from __future__ import annotations
+import os, json
+from dataclasses import dataclass
+import numpy as np
+import pandas as pd
+from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor
+from sklearn.calibration import CalibratedClassifierCV
+from sklearn.metrics import accuracy_score, roc_auc_score, brier_score_loss, mean_absolute_error, mean_squared_error
+from joblib import dump
+from app.ml.features.indicators import add_indicators
+
+ART_DIR = "app/ml/artifacts"
+
+@dataclass
+class TrainConfig:
+    ticker: str
+    horizon_days: int = 7
+    direction_threshold: float = 0.0  # 0 => doar direcție up/down
+    test_ratio: float = 0.15
+    val_ratio: float = 0.15
+    random_state: int = 42
+
+def _ensure_dirs():
+    os.makedirs(ART_DIR, exist_ok=True)
+
+def _label_targets(df: pd.DataFrame, horizon: int, thr: float) -> pd.DataFrame:
+    df = df.copy()
+    future = df["close"].shift(-horizon)
+    ret_h = (future / df["close"] - 1.0) * 100.0
+    df["y_reg"] = ret_h
+    df["y_cls"] = (ret_h > thr).astype(int)
+    return df.dropna().reset_index(drop=True)
+
+def _time_splits(n: int, val_ratio: float, test_ratio: float):
+    test_start = int(n * (1 - test_ratio))
+    val_start  = int(test_start * (1 - val_ratio))
+    return slice(0, val_start), slice(val_start, test_start), slice(test_start, n)
+
+def _prep_xy(df: pd.DataFrame):
+    features = [c for c in df.columns if c not in ("date","open","high","low","close","volume","y_reg","y_cls")]
+    X = df[features].values
+    y_cls = df["y_cls"].values
+    y_reg = df["y_reg"].values
+    return X, y_cls, y_reg, features
+
+def train_on_dataframe(df_raw: pd.DataFrame, cfg: TrainConfig):
+    _ensure_dirs()
+    df = add_indicators(df_raw)
+    df = _label_targets(df, cfg.horizon_days, cfg.direction_threshold)
+    X, y_cls, y_reg, features = _prep_xy(df)
+
+    tr, va, te = _time_splits(len(df), cfg.val_ratio, cfg.test_ratio)
+    Xtr, ytr_c, ytr_r = X[tr], y_cls[tr], y_reg[tr]
+    Xva, yva_c, yva_r = X[va], y_cls[va], y_reg[va]
+    Xte, yte_c, yte_r = X[te], y_cls[te], y_reg[te]
+
+    # Clasificare (direcție)
+    base_cls = GradientBoostingClassifier(random_state=cfg.random_state)
+    base_cls.fit(Xtr, ytr_c)
+    # calibrare probabilități (mai corect pentru „probability_pct”)
+    cls = CalibratedClassifierCV(base_cls, method="isotonic", cv="prefit")
+    cls.fit(Xva, yva_c)
+
+    # Regresie (magnitudine %)
+    reg = GradientBoostingRegressor(random_state=cfg.random_state)
+    reg.fit(Xtr, ytr_r)
+
+    # Metrics
+    proba_te = cls.predict_proba(Xte)[:,1]
+    pred_cls_te = (proba_te >= 0.5).astype(int)
+    acc = float(accuracy_score(yte_c, pred_cls_te))
+    try:
+      auc = float(roc_auc_score(yte_c, proba_te))
+    except Exception:
+      auc = float("nan")
+    brier = float(brier_score_loss(yte_c, proba_te))
+
+    yhat_r = reg.predict(Xte)
+    mae = float(mean_absolute_error(yte_r, yhat_r))
+    rmse = float(mean_squared_error(yte_r, yhat_r, squared=False))
+
+    metrics = {
+        "ticker": cfg.ticker, "horizon_days": cfg.horizon_days,
+        "cls": {"accuracy": acc, "auc": auc, "brier": brier},
+        "reg": {"mae": mae, "rmse": rmse},
+        "n_train": int(len(Xtr)), "n_val": int(len(Xva)), "n_test": int(len(Xte)),
+        "features": features,
+    }
+
+    # Save artifacts
+    model_tag = f"{cfg.ticker.upper()}_{cfg.horizon_days}d"
+    dump(cls, os.path.join(ART_DIR, f"cls_{model_tag}.joblib"))
+    dump(reg, os.path.join(ART_DIR, f"reg_{model_tag}.joblib"))
+    with open(os.path.join(ART_DIR, f"metrics_{model_tag}.json"), "w") as f:
+        json.dump(metrics, f, indent=2)
+
+    return metrics
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\models\prediction.py [size: 0.92 KB] -----
+from sqlalchemy import String, Float, DateTime, Integer
+from sqlalchemy.orm import Mapped, mapped_column
+from datetime import datetime
+from app.db.base import Base
+
+class StockPrediction(Base):
+    __tablename__ = "stock_predictions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    ticker: Mapped[str] = mapped_column(String(16), index=True)
+    horizon_days: Mapped[int] = mapped_column(Integer, default=7)
+    expected_change_pct: Mapped[float] = mapped_column(Float)       # ex: +3.5
+    probability_pct: Mapped[float] = mapped_column(Float)           # ex: 70
+    outcome: Mapped[str] = mapped_column(String(16))                # "win" | "loss" | "breakeven"
+    reward_to_risk: Mapped[float] = mapped_column(Float)            # ex: 1.8
+    rationale: Mapped[str] = mapped_column(String(4096))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\schemas\prediction.py [size: 0.51 KB] -----
+from pydantic import BaseModel, Field, ConfigDict
+from datetime import datetime
+
+class PredictionIn(BaseModel):
+    ticker: str = Field(..., min_length=1, max_length=16)
+    horizon_days: int = Field(ge=1, le=90, default=7)
+
+class PredictionOut(BaseModel):
+    id: int
+    ticker: str
+    horizon_days: int
+    expected_change_pct: float
+    probability_pct: float
+    outcome: str
+    reward_to_risk: float
+    rationale: str
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\services\cache.py [size: 0.86 KB] -----
+from __future__ import annotations
+import time
+from typing import Any, Dict, Tuple
+
+class TTLCache:
+    def __init__(self, ttl_seconds: int = 5, maxsize: int = 2048):
+        self.ttl = ttl_seconds
+        self.maxsize = maxsize
+        self._store: Dict[str, Tuple[float, Any]] = {}
+
+    def get(self, key: str):
+        item = self._store.get(key)
+        if not item: return None
+        ts, val = item
+        if time.time() - ts > self.ttl:
+            self._store.pop(key, None)
+            return None
+        return val
+
+    def set(self, key: str, value: Any):
+        if len(self._store) >= self.maxsize:
+            # remove oldest
+            oldest = min(self._store.items(), key=lambda kv: kv[1][0])[0]
+            self._store.pop(oldest, None)
+        self._store[key] = (time.time(), value)
+
+    def clear(self): self._store.clear()
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\services\market_data.py [size: 6.77 KB] -----
+from __future__ import annotations
+
+"""
+Market data orchestrator (enterprise-grade)
+- Provider registry driven by settings (order + availability)
+- Robust fallback on errors AND empty series
+- Canonical period/interval normalization
+- TTL cache for quotes
+- Structured logging & consistent HTTP errors
+"""
+
+from typing import Iterable, List, Dict, Tuple
+from dataclasses import asdict
+from fastapi import HTTPException
+
+from app.core.config import settings
+from app.core.logging import logger
+
+from .cache import TTLCache
+from .providers.base import Quote, Candle, MarketProvider
+from .providers.yahoo_provider import YahooProvider
+from .providers.alpha_vantage_provider import AlphaVantageProvider
+
+
+# ---------------------------
+# Canonical period/interval
+# ---------------------------
+
+_ALLOWED_PERIODS = {
+    "1d","5d","1mo","3mo","6mo","1y","2y","5y","10y","ytd","max"
+}
+_ALLOWED_INTERVALS = {
+    "1m","2m","5m","15m","30m","60m","90m","1h","1d","5d","1wk","1mo","3mo"
+}
+
+def _normalize_period_interval(period: str, interval: str) -> Tuple[str, str]:
+    p = (period or "1y").lower().strip()
+    i = (interval or "1d").lower().strip()
+    # Normalize common aliases
+    if i == "1min": i = "1m"
+    if i == "5min": i = "5m"
+    if i == "15min": i = "15m"
+    if i == "30min": i = "30m"
+    if i == "60min": i = "60m"
+    if i == "1hour": i = "1h"
+    if p not in _ALLOWED_PERIODS: p = "1y"
+    if i not in _ALLOWED_INTERVALS: i = "1d"
+    return p, i
+
+
+# ---------------------------
+# Providers registry
+# ---------------------------
+
+def _build_providers() -> List[MarketProvider]:
+    """
+    Instantiate providers in the order declared in settings.MARKET_PROVIDER_ORDER.
+    Unknown names are ignored. AlphaVantage is added only if API key is present.
+    Fallback to Yahoo if list ends up empty.
+    """
+    order = [s.strip().lower() for s in (settings.market_provider_order or "").split(",") if s.strip()]
+    providers: List[MarketProvider] = []
+    for name in order:
+        if name == "yahoo":
+            providers.append(YahooProvider())
+        elif name in ("alpha_vantage", "alphavantage", "av"):
+            if settings.alpha_vantage_api_key:
+                providers.append(AlphaVantageProvider(settings.alpha_vantage_api_key))
+            else:
+                logger.warning("AlphaVantage in provider order but API key is missing; skipping.")
+        else:
+            logger.warning("Unknown market provider in order: %s (skipped)", name)
+
+    if not providers:
+        logger.warning("No providers configured — falling back to YahooProvider only.")
+        providers.append(YahooProvider())
+
+    names = [getattr(p, "name", p.__class__.__name__) for p in providers]
+    logger.info("Market providers initialized (order): %s", names)
+    return providers
+
+_PROVIDERS: List[MarketProvider] = _build_providers()
+
+
+# ---------------------------
+# Caching for quotes
+# ---------------------------
+
+_quote_cache = TTLCache(ttl_seconds=settings.market_cache_ttl_seconds, maxsize=4096)
+
+
+# ---------------------------
+# Public API
+# ---------------------------
+
+def get_quotes(tickers: Iterable[str]) -> Dict[str, float | None]:
+    """
+    Return last prices for the given tickers. Uses TTL cache and tries providers in order.
+    Keeps None values (so we don't hammer providers during TTL).
+    """
+    uniq = sorted({t.strip().upper() for t in tickers if t and t.strip()})
+    if not uniq:
+        return {}
+
+    key = "quotes:" + ",".join(uniq)
+    cached = _quote_cache.get(key)
+    if cached is not None:
+        return cached
+
+    last_err: Exception | None = None
+    for p in _PROVIDERS:
+        try:
+            quotes = p.get_quotes(uniq)
+            result = {q.ticker: q.price for q in quotes}
+            # Cache even None to avoid loops for symbols unavailable at the provider
+            _quote_cache.set(key, result)
+            logger.debug("Quotes from %s for %s", p.name, uniq)
+            return result
+        except Exception as e:
+            last_err = e
+            logger.warning("get_quotes failed on provider '%s': %s", p.name, e)
+            continue
+
+    # No provider succeeded
+    msg = f"Eroare quotes (all providers): {last_err}"
+    logger.error(msg)
+    raise HTTPException(status_code=502, detail=msg)
+
+
+def get_history(ticker: str, period: str, interval: str) -> List[Dict]:
+    """
+    Return OHLCV as list[dict] with ISO dates; tries providers in order.
+    If a provider returns an empty series, it's treated as failure and we try the next.
+    We also attempt a second try per provider with a broader period when possible.
+    """
+    t = (ticker or "").strip().upper()
+    if not t:
+        raise HTTPException(status_code=400, detail="ticker missing")
+
+    p_norm, i_norm = _normalize_period_interval(period, interval)
+    last_err: Exception | None = None
+
+    for provider in _PROVIDERS:
+        # Attempt 1: requested (normalized) period/interval
+        try:
+            candles = provider.get_history(t, p_norm, i_norm)
+            if not candles:
+                raise RuntimeError(f"{provider.name} returned empty history")
+            logger.debug("History OK from %s (%s/%s) for %s: %d rows",
+                         provider.name, p_norm, i_norm, t, len(candles))
+            return [_candle_dict(c) for c in candles]
+        except Exception as e:
+            last_err = e
+            logger.info("History attempt#1 failed on %s for %s (%s/%s): %s",
+                        provider.name, t, p_norm, i_norm, e)
+
+        # Attempt 2: broaden period, keep interval (only if first failed and period != 'max')
+        if p_norm != "max":
+            try:
+                candles = provider.get_history(t, "max", i_norm)
+                if not candles:
+                    raise RuntimeError(f"{provider.name} returned empty history (broadened)")
+                logger.debug("History OK from %s (max/%s) for %s: %d rows",
+                             provider.name, i_norm, t, len(candles))
+                return [_candle_dict(c) for c in candles]
+            except Exception as e2:
+                last_err = e2
+                logger.info("History attempt#2 failed on %s for %s (max/%s): %s",
+                            provider.name, t, i_norm, e2)
+
+        # Otherwise continue to next provider
+
+    msg = f"Eroare history (all providers) for {t}: {last_err}"
+    logger.error(msg)
+    raise HTTPException(status_code=502, detail=msg)
+
+
+# ---------------------------
+# Helpers
+# ---------------------------
+
+def _candle_dict(c: Candle) -> Dict:
+    return {
+        "date": c.date.isoformat(),
+        "open": float(c.open),
+        "high": float(c.high),
+        "low": float(c.low),
+        "close": float(c.close),
+        "volume": float(c.volume),
+    }
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\services\ml_integration.py [size: 1.72 KB] -----
+from __future__ import annotations
+from typing import Dict, Any, Tuple
+import pandas as pd
+
+from app.services.market_data import get_history
+from app.ml.pipeline.train_baseline import TrainConfig, train_on_dataframe
+from app.ml.pipeline.infer_service import predict_from_candles
+import os
+from joblib import load
+
+
+def _history_df(ticker: str, period: str, interval: str) -> pd.DataFrame:
+    js = get_history(ticker, period, interval)  # list[dict]
+    if not js:
+        raise RuntimeError(f"Fără istoric pentru {ticker} ({period}/{interval}).")
+    df = pd.DataFrame(js)
+    # normalizăm coloanele
+    df["date"] = pd.to_datetime(df["date"])
+    df = df[["date","open","high","low","close","volume"]].sort_values("date").reset_index(drop=True)
+    return df
+
+def ensure_model_and_predict(ticker: str, horizon_days: int = 7) -> Dict[str, Any]:
+    """
+    1) încearcă să prezică cu modelul existent (dacă e antrenat);
+    2) dacă lipsesc artefactele, antrenează rapid pe istoric real, apoi prezice.
+    """
+    ticker = ticker.upper()
+
+    # Pas 1: avem destule date? (încercăm 5 ani daily; dacă nu, 1 an)
+    try:
+        df = _history_df(ticker, period="5y", interval="1d")
+    except Exception:
+        df = _history_df(ticker, period="1y", interval="1d")
+
+    # Pas 2: încearcă direct să prezici (dacă modelul există)
+    try:
+        pred = predict_from_candles(ticker, horizon_days, df)
+        return pred
+    except FileNotFoundError:
+        # artefactele lipsesc -> antrenăm rapid, apoi prezicem
+        cfg = TrainConfig(ticker=ticker, horizon_days=horizon_days)
+        train_on_dataframe(df, cfg)
+        pred = predict_from_candles(ticker, horizon_days, df)
+        return pred
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\services\news_ingestor.py [size: 0 KB] -----
+[empty]
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\services\prediction_engine.py [size: 1.22 KB] -----
+from dataclasses import dataclass
+from typing import Literal
+
+@dataclass
+class PredictionResult:
+    expected_change_pct: float
+    probability_pct: float
+    outcome: Literal["win", "loss", "breakeven"]
+    reward_to_risk: float
+    rationale: str
+
+class PredictionEngine:
+    """
+    Stub determinist pentru bootstrap.
+    Înlocuiești cu logica reală (știri, Alpha Vantage, context istoric + GPT).
+    """
+
+    def predict(self, ticker: str, horizon_days: int) -> PredictionResult:
+        # Heuristică simplă: doar ca să verificăm cap-coadă (AI → DB → UI).
+        base = sum(ord(c) for c in ticker.upper()) % 10
+        expected = round((base - 5) / 2.0, 2)  # -2.5 .. +2.5
+        prob = 60 + (base % 3) * 10            # 60/70/80
+        outcome = "win" if expected > 0 else ("loss" if expected < 0 else "breakeven")
+        rr = round(abs(expected) / 1.2 + 1.0, 2)
+        rationale = f"Bootstrap stub: ticker={ticker}, horizon={horizon_days}. Verificare lanț end-to-end."
+        return PredictionResult(
+            expected_change_pct=expected,
+            probability_pct=float(prob),
+            outcome=outcome,
+            reward_to_risk=rr,
+            rationale=rationale,
+        )
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\services\providers\alpha_vantage_provider.py [size: 6.29 KB] -----
+from __future__ import annotations
+
+"""
+Alpha Vantage provider (enterprise-grade)
+- Shared HTTPX client with timeouts
+- Retry with exponential backoff on rate-limit / transient errors
+- Proper interval mapping (our canonical -> AV)
+- Raise on empty series so orchestrator can fallback
+"""
+
+from typing import Iterable, List, Dict, Optional
+from datetime import datetime, timezone
+import time
+import httpx
+
+from .base import MarketProvider, Quote, Candle
+
+
+_BASE_URL = "https://www.alphavantage.co/query"
+_INTRADAY_MAP = {  # our canonical -> AV expected
+    "1m": "1min", "5m": "5min", "15m": "15min", "30m": "30min", "60m": "60min", "1h": "60min"
+}
+# AV only supports above granularities for intraday; daily/adjusted for others.
+
+class AlphaVantageProvider(MarketProvider):
+    name = "alpha_vantage"
+
+    def __init__(self, api_key: Optional[str]):
+        if not api_key:
+            raise ValueError("Alpha Vantage API key missing")
+        self.api_key = api_key
+        self._client = httpx.Client(timeout=httpx.Timeout(20.0, read=30.0))
+
+    # --------------- low-level ---------------
+
+    def _get(self, params: Dict[str, str]) -> Dict:
+        p = dict(params)
+        p["apikey"] = self.api_key
+
+        # Basic retry for transient errors / throttling
+        last_err: Exception | None = None
+        for attempt in range(3):
+            try:
+                r = self._client.get(_BASE_URL, params=p)
+                r.raise_for_status()
+                j = r.json()
+                if "Note" in j:
+                    # rate limit -> retry with backoff
+                    raise RuntimeError("rate_limit: " + j["Note"][:200])
+                if "Error Message" in j:
+                    # permanent error for this symbol/request
+                    raise RuntimeError(j["Error Message"])
+                return j
+            except Exception as e:
+                last_err = e
+                # small backoff; last attempt will bubble up
+                time.sleep(0.6 * (attempt + 1))
+        raise RuntimeError(f"AlphaVantage request failed: {last_err}")
+
+    # --------------- quotes ---------------
+
+    def get_quotes(self, tickers: Iterable[str]) -> List[Quote]:
+        quotes: List[Quote] = []
+        now = datetime.now(timezone.utc)
+        for t in sorted(set([t.upper() for t in tickers if t])):
+            j = self._get({"function": "GLOBAL_QUOTE", "symbol": t})
+            q = (j or {}).get("Global Quote", {}) or {}
+            price = q.get("05. price")
+            try:
+                price_f = float(price) if price is not None else None
+            except Exception:
+                price_f = None
+            quotes.append(Quote(ticker=t, price=price_f, currency=None, ts=now, provider=self.name))
+        return quotes
+
+    # --------------- history ---------------
+
+    def get_history(self, ticker: str, period: str, interval: str) -> List[Candle]:
+        """
+        Return candles in ascending time order. Raises on empty series.
+        'period' is not enforced server-side for AV; we return full series
+        and let the orchestrator trim if needed.
+        """
+        ticker = ticker.upper()
+
+        # Intraday?
+        if interval in _INTRADAY_MAP:
+            av_interval = _INTRADAY_MAP[interval]
+            j = self._get({
+                "function": "TIME_SERIES_INTRADAY",
+                "symbol": ticker,
+                "interval": av_interval,
+                "outputsize": "full",
+                "datatype": "json",
+            })
+            key = next((k for k in j.keys() if "Time Series" in k and "Intraday" in k), None)
+            series = (j.get(key) or {}) if key else {}
+            items = sorted(series.items(), key=lambda kv: kv[0])
+            candles = self._items_to_candles_intraday(items)
+        else:
+            # Daily adjusted
+            j = self._get({
+                "function": "TIME_SERIES_DAILY_ADJUSTED",
+                "symbol": ticker,
+                "outputsize": "full",
+                "datatype": "json",
+            })
+            series = j.get("Time Series (Daily)", {}) or {}
+            items = sorted(series.items(), key=lambda kv: kv[0])
+            candles = self._items_to_candles_daily(items)
+
+        if not candles:
+            raise RuntimeError(f"Alpha Vantage empty history for {ticker} (interval={interval})")
+
+        return candles
+
+    # --------------- helpers ---------------
+
+    @staticmethod
+    def _items_to_candles_intraday(items: List) -> List[Candle]:
+        out: List[Candle] = []
+        for s, row in items:
+            # s like "2025-08-19 14:55:00"
+            try:
+                dt = datetime.fromisoformat(s.replace(" ", "T")).replace(tzinfo=timezone.utc)
+            except Exception:
+                # fallback naive parse
+                dt = datetime.strptime(s, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+            out.append(Candle(
+                date=dt,
+                open=float(row.get("1. open") or row.get("open") or 0.0),
+                high=float(row.get("2. high") or row.get("high") or 0.0),
+                low=float(row.get("3. low") or row.get("low") or 0.0),
+                close=float(row.get("4. close") or row.get("close") or 0.0),
+                volume=float(row.get("5. volume") or row.get("volume") or 0.0),
+            ))
+        return out
+
+    @staticmethod
+    def _items_to_candles_daily(items: List) -> List[Candle]:
+        out: List[Candle] = []
+        for s, row in items:
+            # s like "2025-08-19"
+            try:
+                dt = datetime.fromisoformat(s).replace(tzinfo=timezone.utc)
+            except Exception:
+                dt = datetime.strptime(s, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            out.append(Candle(
+                date=dt,
+                open=float(row.get("1. open") or row.get("1. Open") or row.get("open") or 0.0),
+                high=float(row.get("2. high") or row.get("2. High") or row.get("high") or 0.0),
+                low=float(row.get("3. low") or row.get("3. Low") or row.get("low") or 0.0),
+                close=float(row.get("4. close") or row.get("4. Close") or row.get("close") or 0.0),
+                volume=float(row.get("6. volume") or row.get("5. volume") or row.get("volume") or 0.0),
+            ))
+        return out
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\services\providers\base.py [size: 0.66 KB] -----
+from __future__ import annotations
+from dataclasses import dataclass
+from typing import Protocol, Iterable, List, Dict, Any
+from datetime import datetime
+
+@dataclass
+class Quote:
+    ticker: str
+    price: float | None
+    currency: str | None = None
+    ts: datetime | None = None
+    provider: str | None = None
+
+@dataclass
+class Candle:
+    date: datetime
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: float
+
+class MarketProvider(Protocol):
+    name: str
+    def get_quotes(self, tickers: Iterable[str]) -> List[Quote]: ...
+    def get_history(self, ticker: str, period: str, interval: str) -> List[Candle]: ...
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\services\providers\yahoo_provider.py [size: 4.48 KB] -----
+from __future__ import annotations
+from typing import Iterable, List
+from datetime import datetime, timezone
+import pandas as pd
+import yfinance as yf
+
+from .base import MarketProvider, Quote, Candle
+
+_PERIOD_MAP = {
+    "1d":"1d","5d":"5d","1mo":"1mo","3mo":"3mo","6mo":"6mo","1y":"1y","2y":"2y","5y":"5y","10y":"10y","ytd":"ytd","max":"max"
+}
+_INTERVAL_MAP = {
+    "1m":"1m","2m":"2m","5m":"5m","15m":"15m","30m":"30m","60m":"60m","90m":"90m","1h":"1h",
+    "1d":"1d","5d":"5d","1wk":"1wk","1mo":"1mo","3mo":"3mo"
+}
+
+class YahooProvider(MarketProvider):
+    name = "yahoo"
+
+    def get_quotes(self, tickers: Iterable[str]) -> List[Quote]:
+        syms = [t.upper() for t in tickers if t]
+        if not syms:
+            return []
+
+        data = yf.download(
+            tickers=" ".join(syms),
+            period="1d", interval="1m",
+            group_by="ticker", progress=False, prepost=True, threads=True,
+            auto_adjust=False,
+        )
+
+        quotes: List[Quote] = []
+        now = datetime.now(timezone.utc)
+
+        def last_close_from_df(df: pd.DataFrame):
+            try:
+                s = df["Close"].dropna()
+                return float(s.iloc[-1]) if len(s) else None
+            except Exception:
+                return None
+
+        if isinstance(data, pd.DataFrame) and isinstance(data.columns, pd.MultiIndex):
+            # multi-ticker: coloane pe nivelul 0 sunt tickerele
+            for t in syms:
+                price = last_close_from_df(data[t]) if t in data.columns.levels[0] else None
+                quotes.append(Quote(ticker=t, price=price, currency=None, ts=now, provider=self.name))
+        else:
+            # single-ticker
+            price = last_close_from_df(data) if isinstance(data, pd.DataFrame) else None
+            quotes.append(Quote(ticker=syms[0], price=price, currency=None, ts=now, provider=self.name))
+
+        return quotes
+
+    def get_history(self, ticker: str, period: str, interval: str) -> List[Candle]:
+        period = _PERIOD_MAP.get(period, "1y")
+        interval = _INTERVAL_MAP.get(interval, "1d")
+
+        # Încercarea 1: download
+        df = yf.download(
+            tickers=ticker, period=period, interval=interval,
+            progress=False, prepost=True, threads=True, auto_adjust=False,
+        )
+
+        # Încercarea 2: Ticker.history (uneori revine când download e gol)
+        if df is None or df.empty or df.dropna(how="all").empty:
+            df = yf.Ticker(ticker).history(period=period, interval=interval, auto_adjust=False)
+
+        if df is None or df.empty or df.dropna(how="all").empty:
+            raise RuntimeError(f"Yahoo empty history for {ticker} ({period}/{interval})")
+
+        # Păstrăm doar coloanele necesare; toate ca vectori (scalari garantat)
+        cols = [c for c in ["Open","High","Low","Close","Volume"] if c in df.columns]
+        df = df[cols].dropna()
+
+        # Iterare pe tupluri (nu Series) ca să evităm FutureWarning
+        candles: List[Candle] = []
+        # asigură ordinea indexului
+        df = df.sort_index()
+        # extragem ca numpy pentru viteză
+        opens  = df["Open"  ].to_numpy(dtype="float64") if "Open"   in df.columns else None
+        highs  = df["High"  ].to_numpy(dtype="float64") if "High"   in df.columns else None
+        lows   = df["Low"   ].to_numpy(dtype="float64") if "Low"    in df.columns else None
+        closes = df["Close" ].to_numpy(dtype="float64") if "Close"  in df.columns else None
+        vols   = df["Volume"].to_numpy(dtype="float64") if "Volume" in df.columns else None
+
+        for idx_i, ts in enumerate(df.index):
+            # ts poate fi tz-naive; normalizăm la UTC
+            if isinstance(ts, pd.Timestamp):
+                if ts.tzinfo is None:
+                    dt = ts.tz_localize("UTC").to_pydatetime()
+                else:
+                    dt = ts.tz_convert("UTC").to_pydatetime()
+            else:
+                dt = datetime.fromtimestamp(int(pd.Timestamp(ts).timestamp()), tz=timezone.utc)
+
+            o = opens[idx_i]  if opens  is not None else float("nan")
+            h = highs[idx_i]  if highs  is not None else float("nan")
+            l = lows[idx_i]   if lows   is not None else float("nan")
+            c = closes[idx_i] if closes is not None else float("nan")
+            v = vols[idx_i]   if vols   is not None else 0.0
+
+            candles.append(Candle(date=dt, open=float(o), high=float(h), low=float(l), close=float(c), volume=float(v)))
+
+        return candles
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\services\universe.py [size: 2.6 KB] -----
+from __future__ import annotations
+import csv, os, random
+from datetime import datetime, timezone
+from typing import List, Dict
+from functools import lru_cache
+
+from app.core.config import settings
+
+def _norm(t: str) -> str:
+    return t.strip().upper()
+
+@lru_cache(maxsize=1)
+def _fixed_list() -> List[str]:
+    if not settings.universe_fixed:
+        return []
+    return [_norm(x) for x in settings.universe_fixed.split(",") if x.strip()]
+
+@lru_cache(maxsize=1)
+def _pool_list() -> List[str]:
+    path = settings.universe_random_pool_path
+    if not path or not os.path.exists(path):
+        return []
+    out: List[str] = []
+    with open(path, newline="", encoding="utf-8") as f:
+        r = csv.DictReader(f)
+        # Acceptăm fie header 'ticker', fie fișier cu o singură coloană fără header
+        if "ticker" in (r.fieldnames or []):
+            for row in r:
+                if row.get("ticker"):
+                    out.append(_norm(row["ticker"]))
+        else:
+            f.seek(0)
+            for line in f:
+                if line.strip():
+                    out.append(_norm(line))
+    # Unic & ordonat
+    seen = set(); uniq = []
+    for t in out:
+        if t not in seen:
+            seen.add(t); uniq.append(t)
+    return uniq
+
+def _today_seed(dt: datetime | None = None) -> int:
+    if settings.universe_random_seed is not None:
+        return int(settings.universe_random_seed)
+    if dt is None:
+        dt = datetime.now(timezone.utc)
+    return int(dt.strftime("%Y%m%d"))
+
+def daily_random(count: int | None = None, dt: datetime | None = None) -> List[str]:
+    pool = _pool_list()
+    if not pool:
+        return []
+    base_seed = _today_seed(dt)
+    rng = random.Random(base_seed)
+    # Excludem din pool tickerele fixe, ca să nu se dubleze
+    fixed = set(_fixed_list())
+    candidates = [t for t in pool if t not in fixed]
+    if count is None:
+        count = max(0, int(settings.universe_random_daily_count))
+    if count <= 0:
+        return []
+    if count >= len(candidates):
+        return candidates
+    # Tragere fără înlocuire, deterministă pe zi
+    return rng.sample(candidates, count)
+
+def today_universe(dt: datetime | None = None) -> Dict[str, List[str]]:
+    fixed = _fixed_list()
+    rnd = daily_random(dt=dt)
+    # combinat, unic, păstrăm ordinea: mai întâi fixe, apoi random
+    all_list: List[str] = []
+    seen = set()
+    for t in list(fixed) + list(rnd):
+        if t not in seen:
+            seen.add(t); all_list.append(t)
+    return {"fixed": fixed, "random": rnd, "all": all_list, "date_seed": _today_seed(dt)}
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\ui\static\css\components.css [size: 9.18 KB] -----
+/* Inputs */
+.input { background: var(--surface); color: var(--text); border:1px solid var(--line); border-radius: 12px; padding:.55rem .75rem; outline:none; transition: border .15s, box-shadow .2s; }
+.input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+.input.w-40 { width: 10rem; }
+.input.w-28 { width: 7rem; }
+
+.input-icon { position:relative; }
+.input-icon svg { position:absolute; left:.55rem; top:.55rem; opacity:.7 }
+.input-icon .input { padding-left: 2rem; }
+
+/* Buttons */
+.btn { display:inline-flex; align-items:center; gap:.45rem; padding:.58rem .9rem; border-radius: 12px; font-weight: 700; border:1px solid transparent; color: var(--text); background: transparent; cursor: pointer; transition: filter .15s, box-shadow .25s, transform .08s; }
+.btn:active { transform: translateY(1px); }
+
+.btn-primary { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 8px 24px rgba(43,84,215,.35); }
+.btn-primary:hover { filter: brightness(1.05); box-shadow: 0 12px 32px rgba(43,84,215,.45); }
+
+.btn-gradient { color:#fff; background: linear-gradient(180deg, var(--primary-1), var(--primary-2)); border-color: var(--primary-2); box-shadow: 0 10px 30px rgba(43,84,215,.45); }
+.btn-gradient:hover { filter:brightness(1.06); }
+
+.btn-outline { border-color: var(--line); background: color-mix(in_oklab,var(--surface-2),transparent 30%); }
+.btn-outline:hover { background: color-mix(in_oklab,var(--surface-2),transparent 10%); }
+
+.btn-soft { background: rgba(148,163,184,.12); border-color: var(--line); }
+.btn-soft:hover { background: rgba(148,163,184,.18); }
+
+.btn-ghost { border-color: var(--line); }
+.btn-icon { display:inline-flex; align-items:center; }
+.gap { gap:.45rem; }
+
+/* Cards / KPI */
+.card { background: color-mix(in_oklab, var(--surface), transparent 4%); border: 1px solid var(--line); border-radius: 14px; padding: .9rem 1rem; box-shadow: var(--shadow); }
+.kpi-label { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.kpi-value { font-size: 2rem; font-weight: 800; color: var(--text); }
+/* KPI same height so the row stays symmetric */
+.kpi-grid .card{ min-height: 96px; }
+
+/* Signal chips (Buy/Hold/Sell) */
+.chips { display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; margin-top:.25rem; }
+.chip  { display:inline-flex; align-items:center; gap:.35rem; font-weight:800; border-radius:999px; padding:.2rem .65rem; font-size:.85rem; border:1px solid transparent; }
+.chip-buy  { background: linear-gradient(180deg,var(--success-1),var(--success-2)); color:#79f2b2; border-color:#1f6f47; }
+.chip-hold { background: linear-gradient(180deg,var(--warn-1),var(--warn-2));    color:#fde68a; border-color:#8b5a12; }
+.chip-sell { background: linear-gradient(180deg,var(--danger-1),var(--danger-2)); color:#fecaca; border-color:#7f1d1d; }
+
+
+/* Badges */
+.badge { display:inline-flex; align-items:center; font-weight: 800; border:1px solid transparent; border-radius: 8px; padding: .2rem .5rem; }
+.badge-green { background: linear-gradient(180deg,var(--success-1),var(--success-2)); color:#79f2b2; border-color:#1f6f47; }
+.badge-yellow{ background: linear-gradient(180deg,var(--warn-1),var(--warn-2)); color:#fde68a; border-color:#8b5a12; }
+.badge-red   { background: linear-gradient(180deg,var(--danger-1),var(--danger-2)); color:#fecaca; border-color:#7f1d1d; }
+.badge-slate { background: color-mix(in_oklab, var(--surface-2), transparent 20%); color:#cbd5e1; border-color:var(--line); }
+.badge-rr    { background: color-mix(in_oklab, var(--surface-2), transparent 10%); color: var(--accent-blue); border-color: var(--line); }
+
+/* Probability pill + bar */
+.prob { display:flex; align-items:center; gap:.5rem; }
+.prob .pill { display:inline-flex; align-items:center; justify-content:center; min-width:42px; height:26px; padding:0 .5rem; border-radius:999px; font-weight:800; font-size:.82rem; color:#052e1c; background:var(--success); }
+.prob .meter { position:relative; height: 10px; width: 140px; background: var(--track); border-radius:999px; border:1px solid var(--line); overflow:hidden; }
+.prob .meter i { position:absolute; inset:0; display:block; width:0%; background:linear-gradient(90deg,#16a34a,#22c55e,#a3e635); }
+
+/* Skeleton loader */
+.skeleton td { padding: .9rem; }
+.skeleton td::before {
+  content: ""; display:block; width:100%; height:14px; border-radius: 8px;
+  background: linear-gradient(90deg, color-mix(in_oklab,var(--surface-2),transparent 20%), color-mix(in_oklab,var(--surface-2),transparent 10%), color-mix(in_oklab,var(--surface-2),transparent 20%));
+  animation: shimmer 1.25s infinite linear;
+}
+@keyframes shimmer { 0%{ background-position:-200px 0; } 100%{ background-position:200px 0; } }
+
+/* Layout helpers */
+.quick-add { margin-bottom: 1rem; }
+.quick-row { display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; }
+
+.header-actions .theme-label { font-weight:700; }
+
+/* Sortable header buttons */
+.sort-btn {
+  all: unset;
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap:.4rem;
+  font-weight: 900; letter-spacing: .04em;
+  color: var(--accent-blue);
+}
+.sort-btn::after {
+  content: "⇅";
+  font-size: .8em; opacity: .6; transform: translateY(-1px);
+}
+th[aria-sort="ascending"]  .sort-btn::after { content: "↑"; opacity: .9; }
+th[aria-sort="descending"] .sort-btn::after { content: "↓"; opacity: .9; }
+
+/* Pager */
+.pager { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-top:.75rem; }
+.pager-right { display:flex; align-items:center; gap:.5rem; }
+.rows-select { width: 5.2rem; padding:.45rem .55rem; }
+.pager .btn[disabled] { opacity:.5; cursor: not-allowed; }
+
+
+/* Toasts */
+.toast-root { position: fixed; right: 16px; bottom: 16px; display:flex; flex-direction:column; gap:.5rem; z-index: 9999; }
+.toast { opacity:0; transform: translateY(6px); transition: opacity .2s, transform .2s; padding:.6rem .85rem; border-radius: 10px; border:1px solid var(--line); background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+.toast.show { opacity:1; transform: translateY(0); }
+.toast.info { border-color: var(--line); }
+.toast.success { border-color: #1f6f47; background: color-mix(in_oklab,var(--success-1),transparent 20%); }
+.toast.error { border-color: #7f1d1d; background: color-mix(in_oklab,var(--danger-1),transparent 20%); }
+
+/* ===== Modal (accessible dialog) ===== */
+.modal-root { position: fixed; inset: 0; pointer-events: none; z-index: 10000; }
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(2,8,23,.55);
+  backdrop-filter: blur(4px);
+  opacity: 0; transition: opacity .15s ease-out;
+}
+.modal {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -46%) scale(.98);
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow-strong);
+  width: min(1000px, calc(100vw - 96px));
+  max-height: min(86vh, 900px);
+  display: flex; flex-direction: column;
+  opacity: 0; transition: transform .18s ease-out, opacity .18s ease-out;
+}
+.modal.show .modal-overlay { opacity: 1; }
+.modal.show .modal { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+.modal-header { display:flex; align-items:center; justify-content:space-between; padding: .9rem 1rem; border-bottom:1px solid var(--line); }
+.modal-title { font-weight: 800; font-size: 1rem; color: var(--accent-blue); }
+.modal-close { all: unset; cursor:pointer; padding:.3rem .5rem; border-radius: 10px; }
+.modal-close:hover { background: rgba(148,163,184,.12); }
+.modal-body { padding: 1rem; overflow: auto; }
+.modal-footer { display:flex; justify-content:flex-end; gap:.5rem; padding: .9rem 1rem; border-top:1px solid var(--line); }
+.modal-sm { width: min(560px, calc(100vw - 64px)); }
+.modal-lg { width: min(1200px, calc(100vw - 120px)); }
+
+/* ===== Details modal specific ===== */
+.details-grid {
+  display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;
+}
+@media (max-width: 1024px){ .details-grid { grid-template-columns: 1fr; } }
+
+.card-soft { background: color-mix(in_oklab,var(--surface-2),transparent 10%); border:1px solid var(--line); border-radius: 14px; padding: .75rem; }
+
+.sparkline-wrap { height: 220px; }
+.sparkline-wrap svg { width: 100%; height: 100%; display:block; }
+
+.kpis { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:.5rem; }
+.kpi-chip { display:flex; flex-direction:column; gap:.25rem; padding:.5rem .6rem; border-radius: 12px; border:1px solid var(--line); background: color-mix(in_oklab,var(--surface-2),transparent 10%); }
+.kpi-chip .lab { font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+.kpi-chip .val { font-weight: 900; font-size:1.1rem; }
+
+.pred-list { margin-top: .75rem; }
+.pred-list table { width:100%; border-collapse: separate; border-spacing: 0; }
+.pred-list th, .pred-list td { padding: .55rem .55rem; border-bottom:1px solid var(--line); font-size:.92rem; }
+.pred-list th { color: var(--accent-blue); text-transform: uppercase; font-weight: 800; font-size:.75rem; }
+
+.link { color: var(--accent-blue); text-decoration: none; }
+.link:hover { text-decoration: underline; }
+
+.text-green { color:#86efac; }
+.text-red { color:#fca5a5; }
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\ui\static\css\table.css [size: 0.94 KB] -----
+.pro-table { border-collapse: separate; border-spacing: 0; width: 100%; color: var(--text); }
+.pro-table thead th {
+  position: sticky; top: 0; z-index: 2;
+  background: linear-gradient(180deg, var(--surface-2), color-mix(in_oklab,var(--surface-2),transparent 10%));
+  color: var(--accent-blue);
+  text-transform: uppercase; font-size:.8rem; letter-spacing: .04em; font-weight:800;
+  padding: .9rem .9rem; border-bottom: 1px solid var(--line);
+}
+.pro-table tbody td { padding: .9rem .9rem; border-bottom: 1px solid var(--line); }
+.pro-table tbody tr:hover { background: rgba(31,41,55,.45); }
+.text-center { text-align: center; }
+
+/* Scrollbar styling */
+.table-scroll::-webkit-scrollbar { height: 10px; width: 10px; }
+.table-scroll::-webkit-scrollbar-track { background: var(--bg); }
+.table-scroll::-webkit-scrollbar-thumb { background: color-mix(in_oklab, var(--surface-2), transparent 25%); border:1px solid var(--line); border-radius:999px; }
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\ui\static\css\theme.css [size: 3.74 KB] -----
+/* CSS variables + themes (dark/light) */
+:root {
+  --font-sans: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  --container-max: 1600px; /* mărește aici cât vrei: 1440–1600px e sweet spot */
+
+  --bg: #0b1220;
+  --surface: #0f172a;
+  --surface-2: #111827;
+  --line: #1e293b;
+  --text: #e5e7eb;
+  --muted: #94a3b8;
+
+  --primary-1: #5f85ff; /* top gradient */
+  --primary-2: #2b54d7; /* bottom gradient */
+  --primary: #2b54d7;
+  --primary-soft: rgba(43,84,215,.12);
+
+  --success-1: #0b3d25; --success-2: #0f5a34; --success: #22c55e;
+  --warn-1: #3c2b07; --warn-2: #5d430c; --warn: #fde68a;
+  --danger-1: #4a0d0d; --danger-2: #6d1515; --danger: #ef4444;
+
+  --accent-blue: #59caff;
+
+  --track: #0b1220;
+  --shadow-strong: 0 16px 60px rgba(2,8,23,.45);
+  --shadow: 0 8px 24px rgba(2,8,23,.35);
+}
+
+.light {
+  --bg: #f6f7fb;
+  --surface: #ffffff;
+  --surface-2: #f3f4f6;
+  --line: #e5e7eb;
+  --text: #0f172a;
+  --muted: #475569;
+
+  --primary-1: #7aa2ff;
+  --primary-2: #3b6fff;
+  --primary: #3b6fff;
+  --primary-soft: rgba(59,111,255,.08);
+
+  --success-1: #e3faf6; --success-2: #b6f2df; --success: #17b892;
+  --warn-1: #faf8e6; --warn-2: #efe5b2; --warn: #d6b41f;
+  --danger-1: #ffebee; --danger-2: #ffd0d6; --danger: #e11d48;
+
+  --accent-blue: #2176ff;
+  --track: #eef2ff;
+  --shadow-strong: 0 16px 60px rgba(4,10,24,.12);
+  --shadow: 0 8px 24px rgba(4,10,24,.08);
+}
+
+/* Color utility aliases */
+body { font-family: var(--font-sans); letter-spacing: .005em; }
+.bg-var { background: var(--bg); }
+.surface { background: var(--surface); }
+.surface-2 { background: var(--surface-2); }
+.surface-text { color: var(--text); }
+.muted { color: var(--muted); }
+
+/* Fluid container – mai lat pe ecrane mari, cu margin de siguranță */
+.container {
+  width: min(var(--container-max), calc(100vw - 48px));
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+
+.app-header {
+  position: sticky; top: 0; z-index: 40;
+  backdrop-filter: blur(6px);
+  background: color-mix(in_oklab, var(--bg), transparent 18%);
+  border-bottom: 1px solid var(--line);
+}
+.header-inner { display:flex; align-items:center; justify-content:space-between; padding: .8rem 0; }
+.brand { display:flex; align-items:center; gap:.6rem; }
+.logo-dot { width: 36px; height: 36px; border-radius: 14px; background: var(--primary); box-shadow: 0 0 0 4px rgba(59,111,255,.18); }
+.brand-title { color: var(--accent-blue); text-decoration:none; font-weight: 800; letter-spacing:.2px; font-size: 1.1rem; }
+.header-actions { display:flex; align-items:center; gap:.6rem; }
+
+.py-6 { padding-block: 1.5rem; }
+.mb-4 { margin-bottom: 1rem; }
+.page-title { font-weight: 700; font-size: 1.2rem; color: var(--text); }
+
+.toolbar { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom: 1rem; }
+.toolbar-left, .toolbar-right { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+
+/* KPI grid responsiv: 1 → 2 → 3 → 4 coloane */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* ≤ 1024px → 2 coloane */
+@media (max-width: 1024px) {
+  .kpi-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+
+/* ≤ 640px → 1 coloană */
+@media (max-width: 640px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+}
+
+/* ≥ 1536px (2XL) → 4 coloane */
+@media (min-width: 1536px) {
+  .kpi-grid { grid-template-columns: repeat(4, minmax(0,1fr)); }
+}
+
+.table-surface { background: linear-gradient(180deg, var(--surface), color-mix(in_oklab,var(--surface-2),transparent 10%)); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); }
+.table-scroll { overflow:auto; border-radius: 18px; }
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\ui\static\js\components\details.js [size: 3.5 KB] -----
+import { openModal } from "./modal.js";
+import { renderSparkline } from "./sparkline.js";
+import { fmt } from "../core/utils.js";
+import { getPredictionDetails } from "../core/api.js";
+import { toast } from "./../components/toast.js";
+
+export async function openDetails(ticker){
+  try {
+    const data = await getPredictionDetails(ticker, { period:"6mo", interval:"1d", limit:12 });
+
+    const root = document.createElement("div");
+    root.innerHTML = `
+      <div class="details-grid">
+        <div class="card-soft">
+          <div class="flex-col">
+            <div class="muted" style="margin-bottom:.4rem;">${data.period} • ${data.interval}</div>
+            <div class="sparkline-wrap" id="spark-wrap"></div>
+          </div>
+        </div>
+        <div class="card-soft">
+          <div class="kpis">
+            <div class="kpi-chip">
+              <div class="lab">Ultimul preț</div>
+              <div class="val">${data.last_price == null ? "-" : fmt.price(data.last_price)}</div>
+            </div>
+            <div class="kpi-chip">
+              <div class="lab">Probabilitate</div>
+              <div class="val">${data.prediction ? `${data.prediction.probability_pct.toFixed(2)}%` : "-"}</div>
+            </div>
+            <div class="kpi-chip">
+              <div class="lab">Expected change</div>
+              <div class="val ${data.prediction && data.prediction.expected_change_pct>=0 ? "text-green":"text-red"}">
+                ${data.prediction ? fmt.pct(data.prediction.expected_change_pct) : "-"}
+              </div>
+            </div>
+          </div>
+          <div class="kpi-chip" style="margin-top:.5rem;">
+            <div class="lab">Reward / Risk</div>
+            <div class="val">${data.prediction ? data.prediction.reward_to_risk.toFixed(2) : "-"}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pred-list card-soft">
+        <div class="muted" style="margin-bottom:.35rem;">Predicții anterioare</div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Horizon</th>
+                <th>Prob.</th>
+                <th>Exp. %</th>
+                <th>R:R</th>
+                <th>Outcome</th>
+              </tr>
+            </thead>
+            <tbody id="pred-rows"></tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    // Sparkline
+    const prices = (data.candles || []).map(c => c.close);
+    renderSparkline(root.querySelector("#spark-wrap"), prices);
+
+    // Rows
+    const tb = root.querySelector("#pred-rows");
+    const rows = [data.prediction, ...(data.previous || [])].filter(Boolean);
+    if (!rows.length){
+      tb.innerHTML = `<tr><td colspan="6" class="muted">Nu există predicții pentru acest ticker.</td></tr>`;
+    } else {
+      for (const r of rows){
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${r.created_at ? new Date(r.created_at).toLocaleString() : "-"}</td>
+          <td>${r.horizon_days}d</td>
+          <td>${r.probability_pct.toFixed(2)}%</td>
+          <td class="${r.expected_change_pct>=0?"text-green":"text-red"}">${fmt.pct(r.expected_change_pct)}</td>
+          <td>${r.reward_to_risk.toFixed(2)}</td>
+          <td>${r.outcome || "-"}</td>
+        `;
+        tb.appendChild(tr);
+      }
+    }
+
+    openModal({ title: `${data.ticker} • Detalii`, content: root, size: "lg" });
+  } catch (e){
+    toast(String(e.message || e), "error");
+  }
+}
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\ui\static\js\components\modal.js [size: 2.67 KB] -----
+let activeModal = null;
+
+function ensureRoot(){
+  let root = document.getElementById("modal-root");
+  if (!root){
+    root = document.createElement("div");
+    root.id = "modal-root";
+    root.className = "modal-root";
+    document.body.appendChild(root);
+  }
+  return root;
+}
+
+function trapFocus(modalEl){
+  const focusable = modalEl.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+  const first = focusable[0], last = focusable[focusable.length - 1];
+  function onKey(e){
+    if (e.key === "Escape") closeModal();
+    if (e.key !== "Tab") return;
+    if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+  }
+  modalEl.addEventListener("keydown", onKey);
+  return () => modalEl.removeEventListener("keydown", onKey);
+}
+
+export function openModal({ title = "", content, size = "lg" }){
+  if (activeModal) closeModal();
+  const root = ensureRoot();
+
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+
+  const modal = document.createElement("div");
+  modal.className = `modal modal-${size}`;
+  modal.setAttribute("role", "dialog");
+  modal.setAttribute("aria-modal", "true");
+
+  const header = document.createElement("div");
+  header.className = "modal-header";
+  header.innerHTML = `<div class="modal-title">${title}</div>`;
+  const closeBtn = document.createElement("button");
+  closeBtn.className = "modal-close";
+  closeBtn.setAttribute("aria-label", "Close");
+  closeBtn.innerHTML = "✕";
+  header.appendChild(closeBtn);
+
+  const body = document.createElement("div");
+  body.className = "modal-body";
+  if (content instanceof HTMLElement) body.appendChild(content);
+  else if (typeof content === "string") body.innerHTML = content;
+
+  const container = document.createElement("div");
+  container.appendChild(overlay);
+  container.appendChild(modal);
+  modal.appendChild(header);
+  modal.appendChild(body);
+  root.appendChild(container);
+
+  const removeTrap = trapFocus(modal);
+
+  const onClose = () => {
+    container.classList.remove("show");
+    setTimeout(() => {
+      removeTrap();
+      container.remove();
+      activeModal = null;
+    }, 160);
+  };
+  overlay.addEventListener("click", onClose);
+  closeBtn.addEventListener("click", onClose);
+
+  // animație
+  setTimeout(() => container.classList.add("show"), 10);
+
+  // focus în dialog
+  setTimeout(() => closeBtn.focus(), 60);
+
+  activeModal = { container, onClose };
+  return onClose;
+}
+
+export function closeModal(){
+  if (activeModal) activeModal.onClose();
+}
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\ui\static\js\components\sparkline.js [size: 1.53 KB] -----
+export function renderSparkline(el, data, { strokeWidth = 2 } = {}){
+  if (!el) return;
+  const w = el.clientWidth || 600;
+  const h = el.clientHeight || 220;
+  if (!Array.isArray(data) || data.length < 2){
+    el.innerHTML = `<div class="muted">Insuficiente puncte pentru grafic.</div>`;
+    return;
+  }
+  const min = Math.min(...data), max = Math.max(...data);
+  const padTop = 8, padBottom = 14, padX = 8;
+  const x = (i) => padX + (i / (data.length - 1)) * (w - 2*padX);
+  const y = (v) => {
+    const r = max - min || 1;
+    return padTop + (1 - (v - min) / r) * (h - padTop - padBottom);
+  };
+
+  const points = data.map((v, i) => `${x(i)},${y(v)}`).join(" ");
+  const up = data[data.length - 1] >= data[0];
+
+  const svg = `
+  <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <linearGradient id="sgFill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${up ? "#22c55e" : "#ef4444"}" stop-opacity="0.18"/>
+        <stop offset="100%" stop-color="${up ? "#22c55e" : "#ef4444"}" stop-opacity="0.00"/>
+      </linearGradient>
+      <filter id="sgShadow"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.4"/></filter>
+    </defs>
+    <polyline points="${points}" fill="none" stroke="${up ? "#22c55e" : "#ef4444"}" stroke-width="${strokeWidth}" filter="url(#sgShadow)" />
+    <polygon points="${points} ${x(data.length-1)},${h-padBottom} ${x(0)},${h-padBottom}" fill="url(#sgFill)"/>
+  </svg>`;
+  el.innerHTML = svg;
+}
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\ui\static\js\components\toast.js [size: 0.41 KB] -----
+export function toast(msg, type="info"){
+  const root = document.getElementById("toast-root");
+  if (!root) return;
+  const el = document.createElement("div");
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${msg}</span>`;
+  root.appendChild(el);
+  setTimeout(()=>{ el.classList.add("show"); }, 10);
+  setTimeout(()=>{ el.classList.remove("show"); setTimeout(()=>el.remove(), 250); }, 2500);
+}
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\ui\static\js\core\api.js [size: 1.68 KB] -----
+export async function getPredictions() {
+  const r = await fetch("/api/predictions");
+  if (!r.ok) {
+    const t = await r.text().catch(()=> "");
+    throw new Error(`GET /api/predictions failed: ${r.status} ${r.statusText} ${t?.slice(0,120)}`);
+  }
+  return r.json();
+}
+
+export async function createPrediction(ticker, horizon_days=7) {
+  const r = await fetch("/api/predictions", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ ticker, horizon_days })
+  });
+  if (!r.ok) {
+    const t = await r.text().catch(()=> "");
+    throw new Error(`POST /api/predictions failed: ${r.status} ${r.statusText} ${t?.slice(0,120)}`);
+  }
+  return r.json();
+}
+
+export async function getQuotes(tickers) {
+  const uniq = [...new Set(tickers.map(t => t.toUpperCase()))];
+  if (!uniq.length) return {};
+  const r = await fetch(`/api/market/quotes?tickers=${encodeURIComponent(uniq.join(","))}`);
+  if (!r.ok) {
+    const t = await r.text().catch(()=> "");
+    throw new Error(`GET /api/market/quotes failed: ${r.status} ${r.statusText} ${t?.slice(0,120)}`);
+  }
+  const j = await r.json();
+  const map = {};
+  for (const q of (j.quotes||[])) map[q.ticker] = q.price;
+  return map;
+}
+
+export async function getPredictionDetails(ticker, { period="6mo", interval="1d", limit=12 } = {}){
+  const url = `/api/predictions/${encodeURIComponent(ticker)}?period=${encodeURIComponent(period)}&interval=${encodeURIComponent(interval)}&limit=${limit}`;
+  const r = await fetch(url);
+  if (!r.ok){
+    const t = await r.text().catch(()=> "");
+    throw new Error(`GET ${url} failed: ${r.status} ${r.statusText} ${t?.slice(0,120)}`);
+  }
+  return r.json();
+}
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\ui\static\js\core\theme.js [size: 0.83 KB] -----
+function setTheme(theme){
+  const root = document.documentElement;
+  if (theme === "light"){ root.classList.add("light"); root.classList.remove("dark"); }
+  else { root.classList.add("dark"); root.classList.remove("light"); }
+  localStorage.setItem("theme", theme);
+  const btn = document.getElementById("themeToggle");
+  if (btn){
+    const isLight = root.classList.contains("light");
+    btn.setAttribute("aria-pressed", String(isLight));
+    const lbl = btn.querySelector(".theme-label");
+    if (lbl) lbl.textContent = isLight ? "Dark Mode" : "Light Mode";
+  }
+}
+setTheme(localStorage.getItem("theme") || "dark");
+const btn = document.getElementById("themeToggle");
+if (btn) btn.addEventListener("click", () => {
+  const next = document.documentElement.classList.contains("dark") ? "light" : "dark";
+  setTheme(next);
+});
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\ui\static\js\core\utils.js [size: 0.42 KB] -----
+export const fmt = {
+  price: (n) => (n == null ? "-" : Number(n).toFixed(2)),
+  pct:   (n) => (n == null ? "-" : `${Number(n).toFixed(2)}%`),
+  date:  (iso) => new Date(iso).toLocaleString(),
+};
+
+export function clamp01(x){ return Math.max(0, Math.min(1, x)); }
+export function qs(sel, el=document){ return el.querySelector(sel); }
+export function qsa(sel, el=document){ return Array.from(el.querySelectorAll(sel)); }
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\ui\static\js\pages\dashboard.js [size: 10.42 KB] -----
+import { fmt, qs, qsa } from "../core/utils.js";
+import { getPredictions, createPrediction, getQuotes } from "../core/api.js";
+import { toast } from "../components/toast.js";
+import { openDetails } from "../components/details.js";
+
+
+/* ---------- PERSIST PREFS ---------- */
+const PREFS_KEY = "dashPrefs_v1";
+function loadPrefs(){
+  try { return JSON.parse(localStorage.getItem(PREFS_KEY) || "{}"); } catch { return {}; }
+}
+function savePrefs(p){ localStorage.setItem(PREFS_KEY, JSON.stringify(p)); }
+const prefs = Object.assign({ sortKey:"ticker", sortDir:"asc", pageSize:15, search:"", page:1 }, loadPrefs());
+
+/* ---------- STATE ---------- */
+const state = {
+  rows: [],
+  quotes: {},
+  sortKey: prefs.sortKey,
+  sortDir: prefs.sortDir,
+  page: prefs.page || 1,
+  pageSize: prefs.pageSize,
+  filtered() {
+    const q = (qs("#searchSymbol")?.value || prefs.search || "").trim().toUpperCase();
+    if (!q) return this.rows;
+    return this.rows.filter(r => r.ticker.includes(q));
+  }
+};
+
+/* ---------- DOMAIN RULES ---------- */
+function decideSignal(prob, exp, rr) {
+  if (prob >= 75 && exp >= 1.0 && rr >= 1.15) return { t: "Buy", cls: "badge-green" };
+  if (exp <= -1.0 && prob >= 60) return { t: "Sell", cls: "badge-red" };
+  return { t: "Hold", cls: "badge-yellow" };
+}
+function outcomeBadge(outcome) {
+  if (outcome === "win") return { t: "Win", cls: "badge-green" };
+  if (outcome === "loss") return { t: "Loss", cls: "badge-red" };
+  return { t: "Breakeven", cls: "badge-slate" };
+}
+function probCell(pct) {
+  const v = Math.max(0, Math.min(100, pct || 0));
+  return `<div class="prob"><span class="pill">${Math.round(v)}%</span><span class="meter"><i style="width:${v}%"></i></span></div>`;
+}
+
+/* ---------- KPIs ---------- */
+function renderKPIs(data) {
+  qs("#kpi-total").textContent = String(data.length || 0);
+  qs("#kpi-prob").textContent  = data.length ? `${(data.reduce((a,b)=>a+b.probability_pct,0)/data.length).toFixed(1)}%` : "-";
+  qs("#kpi-rr").textContent    = data.length ? (data.reduce((a,b)=>a+b.reward_to_risk,0)/data.length).toFixed(2) : "-";
+}
+function renderSignalKPIs(data) {
+  let buy=0, hold=0, sell=0;
+  for (const p of data){
+    const sig = decideSignal(p.probability_pct, p.expected_change_pct || 0, p.reward_to_risk);
+    if (sig.t === "Buy") buy++;
+    else if (sig.t === "Sell") sell++;
+    else hold++;
+  }
+  const kb = qs("#kpi-buy"), kh = qs("#kpi-hold"), ks = qs("#kpi-sell");
+  if (kb) kb.textContent = `Buy: ${buy}`;
+  if (kh) kh.textContent = `Hold: ${hold}`;
+  if (ks) ks.textContent = `Sell: ${sell}`;
+}
+
+/* ---------- SORT & PAGE HELPERS ---------- */
+function preparedRows() {
+  return state.filtered().map(p => {
+    const price = state.quotes[p.ticker] ?? null;
+    const expected = p.expected_change_pct || 0;
+    const mid   = price != null ? price * (1 + expected/100) : null;
+    const delta = price != null ? Math.max(price * 0.015, Math.abs(expected)/100 * price * 0.20) : null;
+    const estLo = mid != null ? mid - delta : null;
+    const estHi = mid != null ? mid + delta : null;
+    const estPriceMid = mid;
+    const signal = decideSignal(p.probability_pct, expected, p.reward_to_risk).t;
+    const outcomeRank = p.outcome === "win" ? 2 : (p.outcome === "loss" ? 0 : 1);
+    return { p, price, expected, estLo, estHi, estPriceMid, signal, outcomeRank };
+  });
+}
+function sortRows(rows) {
+  const dir = state.sortDir === "asc" ? 1 : -1;
+  const key = state.sortKey;
+  rows.sort((A, B) => {
+    const cmp = (x, y) => (x > y) - (x < y);
+    switch (key) {
+      case "ticker":      return dir * cmp(A.p.ticker, B.p.ticker);
+      case "price":       return dir * cmp(A.price ?? -Infinity, B.price ?? -Infinity);
+      case "prediction":  return dir * cmp(A.expected, B.expected);
+      case "estprice":    return dir * cmp(A.estPriceMid ?? -Infinity, B.estPriceMid ?? -Infinity);
+      case "probability": return dir * cmp(A.p.probability_pct, B.p.probability_pct);
+      case "outcome":     return dir * cmp(A.outcomeRank, B.outcomeRank);
+      case "rr":          return dir * cmp(A.p.reward_to_risk, B.p.reward_to_risk);
+      case "signal":      return dir * cmp(A.signal, B.signal);
+      case "date":        return dir * cmp(new Date(A.p.created_at).getTime(), new Date(B.p.created_at).getTime());
+      default:            return 0;
+    }
+  });
+  return rows;
+}
+function pageSlice(rows) {
+  const start = (state.page - 1) * state.pageSize;
+  const end = start + state.pageSize;
+  return rows.slice(start, end);
+}
+
+/* ---------- TABLE RENDER ---------- */
+function updateSortARIA() {
+  qsa("thead th").forEach(th => th.setAttribute("aria-sort", "none"));
+  const th = Array.from(qsa("thead th")).find(th => {
+    const btn = th.querySelector(".sort-btn"); return btn && btn.dataset.sort === state.sortKey;
+  });
+  if (th) th.setAttribute("aria-sort", state.sortDir === "asc" ? "ascending" : "descending");
+}
+function renderPager() {
+  const all = preparedRows();
+  const total = all.length;
+  const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
+  if (state.page > totalPages) state.page = totalPages;
+  const startIdx = total ? (state.page - 1) * state.pageSize + 1 : 0;
+  const endIdx = Math.min(total, state.page * state.pageSize);
+  qs("#rowsInfo").textContent = `Showing ${startIdx}–${endIdx} of ${total}`;
+  qs("#pageInfo").textContent = `Page ${state.page} / ${totalPages}`;
+  qs("#prevPage").disabled = state.page <= 1;
+  qs("#nextPage").disabled = state.page >= totalPages;
+  qs("#rowsPerPage").value = String(state.pageSize);
+}
+function renderTable() {
+  const tb = qs("#tableBody"); if (!tb) return;
+  tb.innerHTML = "";
+  const rows = pageSlice(sortRows(preparedRows()));
+  for (const r of rows) {
+    const { p, price, expected, estLo, estHi } = r;
+    const sig = decideSignal(p.probability_pct, expected, p.reward_to_risk);
+    const out = outcomeBadge(p.outcome);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="font-bold">${p.ticker}</td>
+      <td>${price==null?"-":fmt.price(price)}</td>
+      <td class="${expected >= 0 ? "text-green" : "text-red"}">${fmt.pct(expected)}</td>
+      <td>${(estLo==null||estHi==null)?"-":`${fmt.price(estLo)} – ${fmt.price(estHi)}`}</td>
+      <td>${probCell(p.probability_pct)}</td>
+      <td><span class="${out.cls} badge">${out.t}</span></td>
+      <td><span class="badge badge-rr">${Number(p.reward_to_risk).toFixed(2)}</span></td>
+      <td><span class="${sig.cls} badge">${sig.t}</span></td>
+      <td class="muted">${fmt.date(p.created_at)}</td>
+      <td class="text-center"><a class="link details-link" href="#" data-ticker="${p.ticker}">Details</a></td>
+    `;
+    tb.appendChild(tr);
+  }
+  renderPager();
+  updateSortARIA();
+  persistNow();
+}
+
+  // Bind “Details” links
+  qsa(".details-link").forEach(a => {
+    a.addEventListener("click", (ev) => {
+      ev.preventDefault();
+      const t = a.getAttribute("data-ticker");
+      if (t) openDetails(t);
+    });
+  });
+
+
+/* ---------- DATA FLOW ---------- */
+async function refreshAll() {
+  const data = await getPredictions();
+  state.rows = data;
+  renderKPIs(data);
+  renderSignalKPIs(data);
+  state.quotes = await getQuotes(data.map(x => x.ticker));
+  state.page = 1; // reset la noul set
+  renderTable();
+}
+
+/* ---------- EVENTS ---------- */
+function persistNow(){
+  const search = qs("#searchSymbol")?.value || "";
+  savePrefs({ sortKey:state.sortKey, sortDir:state.sortDir, pageSize:state.pageSize, page:state.page, search });
+}
+function bindEvents() {
+  const reRender = () => renderTable();
+
+  // sort
+  qsa(".sort-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const key = btn.dataset.sort;
+      if (state.sortKey === key) state.sortDir = (state.sortDir === "asc" ? "desc" : "asc");
+      else { state.sortKey = key; state.sortDir = "asc"; }
+      state.page = 1; reRender();
+    });
+  });
+
+  // pager
+  qs("#prevPage")?.addEventListener("click", () => { if (state.page>1){ state.page--; reRender(); } });
+  qs("#nextPage")?.addEventListener("click", () => { state.page++; reRender(); });
+  qs("#rowsPerPage")?.addEventListener("change", (e) => {
+    state.pageSize = parseInt(e.target.value, 10) || 15;
+    state.page = 1; reRender();
+  });
+
+  // refresh + search
+  const doRefresh = () => refreshAll().catch(e => toast(e.message, "error"));
+  qs("#btnRefresh")?.addEventListener("click", doRefresh);
+  qs("#btnSearch")?.addEventListener("click", doRefresh);
+  const si = qs("#searchSymbol");
+  if (si){ si.value = prefs.search || ""; si.addEventListener("input", doRefresh); }
+
+  // predict
+  qs("#btnPredict")?.addEventListener("click", async () => {
+    const t = qs("#tickerInput")?.value.trim().toUpperCase();
+    const h = parseInt(qs("#horizonInput")?.value || "7", 10);
+    if (!t) { toast("Ticker required", "error"); return; }
+    try {
+      await createPrediction(t, h);
+      toast(`Prediction added: ${t}`, "success");
+      if (qs("#tickerInput")) qs("#tickerInput").value = "";
+      await refreshAll();
+    } catch(e){ toast(e.message, "error"); }
+  });
+
+  // HOTKEYS
+  let gPressedAt = 0;
+  document.addEventListener("keydown", (ev) => {
+    const tag = (ev.target && ev.target.tagName) || "";
+    const editing = tag === "INPUT" || tag === "TEXTAREA";
+    // "/" focus search
+    if (ev.key === "/" && !editing) {
+      ev.preventDefault(); qs("#searchSymbol")?.focus(); return;
+    }
+    // Enter: dacă e în inputs Predict, trimite; dacă e în search, refresh
+    if (ev.key === "Enter") {
+      if (ev.target === qs("#tickerInput") || ev.target === qs("#horizonInput")) { qs("#btnPredict")?.click(); }
+      else if (ev.target === qs("#searchSymbol")) { qs("#btnSearch")?.click(); }
+      return;
+    }
+    if (editing) return; // nu captura navegația dacă editează un input
+
+    // navigație paginare
+    if (ev.key === "ArrowLeft") { ev.preventDefault(); qs("#prevPage")?.click(); }
+    if (ev.key === "ArrowRight"){ ev.preventDefault(); qs("#nextPage")?.click(); }
+
+    // gg / G
+    const now = performance.now();
+    if (ev.key.toLowerCase() === "g") {
+      if (now - gPressedAt < 350) { window.scrollTo({top:0,behavior:"smooth"}); gPressedAt = 0; }
+      else gPressedAt = now;
+    }
+    if (ev.key === "G" && ev.shiftKey) { window.scrollTo({top:document.body.scrollHeight, behavior:"smooth"}); }
+  });
+}
+
+/* ---------- BOOT ---------- */
+bindEvents();
+refreshAll().catch(e => toast(e.message, "error"));
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\ui\static\js\pages\fasttrade.js [size: 2.23 KB] -----
+import { fmt, qs } from "../core/utils.js";
+import { getPredictions, getQuotes } from "../core/api.js";
+import { toast } from "../components/toast.js";
+
+function decideSignal(prob, exp, rr){
+  if (prob >= 75 && exp >= 1.0 && rr >= 1.15) return { t:"Buy", cls:"badge-green" };
+  if (exp <= -1.0 && prob >= 60) return { t:"Sell", cls:"badge-red" };
+  return { t:"Hold", cls:"badge-yellow" };
+}
+function outcomeBadge(outcome){
+  if (outcome === "win") return { t:"Win", cls:"badge-green" };
+  if (outcome === "loss") return { t:"Loss", cls:"badge-red" };
+  return { t:"Breakeven", cls:"badge-slate" };
+}
+function probCell(pct){
+  const v = Math.max(0, Math.min(100, pct || 0));
+  return `<div class="prob"><span class="pill">${Math.round(v)}%</span><span class="meter"><i style="width:${v}%"></i></span></div>`;
+}
+
+async function loadOnce(){
+  const body = qs("#ftBody"); if (!body) return;
+  const data = await getPredictions();
+  const quotes = await getQuotes(data.map(x=>x.ticker));
+  body.innerHTML = "";
+  for (const p of data.slice(0, 25)){
+    const price = quotes[p.ticker] ?? null;
+    const out = outcomeBadge(p.outcome);
+    const sig = decideSignal(p.probability_pct, p.expected_change_pct, p.reward_to_risk);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="font-bold">${p.ticker}</td>
+      <td>${price==null?"-":fmt.price(price)}</td>
+      <td class="${p.expected_change_pct>=0?"text-green":"text-red"}">${fmt.pct(p.expected_change_pct)}</td>
+      <td>${probCell(p.probability_pct)}</td>
+      <td><span class="${out.cls} badge">${out.t}</span></td>
+      <td><span class="badge badge-rr">${Number(p.reward_to_risk).toFixed(2)}</span></td>
+      <td><span class="${sig.cls} badge">${sig.t}</span></td>
+      <td class="muted">${fmt.date(p.created_at)}</td>
+    `;
+    body.appendChild(tr);
+  }
+}
+
+let timer = null;
+qs("#ftStart").addEventListener("click", () => {
+  if (!timer){ loadOnce().catch(()=>{}); timer = setInterval(loadOnce, 5000); toast("Fast Trade: started", "success"); }
+});
+qs("#ftStop").addEventListener("click", () => {
+  if (timer){ clearInterval(timer); timer = null; toast("Fast Trade: stopped", "info"); }
+});
+loadOnce().catch(e => toast(e.message, "error"));
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\ui\templates\base.html [size: 2.64 KB] -----
+{% set title = app_name or "Stock Predictions Dashboard" %}
+<!DOCTYPE html>
+<html lang="ro" class="h-full">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>{{ title }}</title>
+    <!-- Fonts: Manrope (clean, readable) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400..800&display=swap" rel="stylesheet">
+
+
+  <!-- Prevent FOUC: set theme ASAP -->
+  <script>
+    (function(){
+      try {
+        var t = localStorage.getItem('theme') || 'dark';
+        if (t === 'light') document.documentElement.classList.add('light');
+        else document.documentElement.classList.add('dark');
+      } catch(e){}
+    })();
+  </script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/static/css/theme.css"/>
+  <link rel="stylesheet" href="/static/css/components.css"/>
+  <link rel="stylesheet" href="/static/css/table.css"/>
+
+  <!-- Meta -->
+  <meta name="color-scheme" content="dark light">
+</head>
+<body class="min-h-screen bg-var surface-text">
+  <header class="app-header">
+    <div class="container header-inner">
+      <div class="brand">
+        <div class="logo-dot"></div>
+        <a href="/" class="brand-title">{{ title }}</a>
+      </div>
+      <nav class="header-actions" aria-label="primary">
+        <a href="/fast-trade" class="btn btn-outline btn-icon gap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 3L4 14h7l-1 7 9-11h-7l1-7z"/></svg>
+          <span>Fast Trade</span>
+        </a>
+        <button id="themeToggle" class="btn btn-ghost btn-icon" aria-pressed="false" aria-label="Toggle theme">
+          <span class="theme-label">Light Mode</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container py-6">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Toast container -->
+  <div id="toast-root" class="toast-root" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Modal root (pentru dialoguri accesibile) -->
+  <div id="modal-root" class="modal-root"></div>
+
+
+  <!-- Core JS -->
+  <script type="module" src="/static/js/core/theme.js"></script>
+  <script type="module" src="/static/js/core/utils.js"></script>
+  <script type="module" src="/static/js/core/api.js"></script>
+  <script type="module" src="/static/js/components/toast.js"></script>
+  <!-- Page-level scripts are loaded in individual templates -->
+</body>
+</html>
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\ui\templates\fasttrade.html [size: 1.15 KB] -----
+{% extends "base.html" %}
+{% block content %}
+<section class="toolbar">
+  <div class="toolbar-left">
+    <h2 class="page-title">Fast Trade</h2>
+  </div>
+  <div class="toolbar-right">
+    <button id="ftStart" class="btn btn-gradient">Start (5s)</button>
+    <button id="ftStop" class="btn btn-outline">Stop</button>
+  </div>
+</section>
+
+<p class="muted mb-4">
+  Live polling demo pe predicțiile existente + cotații stub. Vom conecta ulterior NASDAQ-100/eToro feed.
+</p>
+
+<section class="table-surface">
+  <div class="table-scroll">
+    <table class="pro-table" role="grid" aria-label="Fast-trade table">
+      <thead>
+      <tr>
+        <th>Symbol</th>
+        <th>Price</th>
+        <th>Prediction (%)</th>
+        <th>Probability</th>
+        <th>Win/Loss/Breakeven</th>
+        <th>R:R</th>
+        <th>Signal</th>
+        <th>Updated</th>
+      </tr>
+      </thead>
+      <tbody id="ftBody">
+        <tr class="skeleton"><td colspan="8"></td></tr>
+        <tr class="skeleton"><td colspan="8"></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<script type="module" src="/static/js/pages/fasttrade.js"></script>
+{% endblock %}
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\app\ui\templates\index.html [size: 4.97 KB] -----
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Toolbar Top -->
+<section class="toolbar">
+  <div class="toolbar-left">
+    <div class="input-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" aria-hidden="true"
+           viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input id="searchSymbol" class="input" placeholder="Search symbol..." aria-label="Search symbol"/>
+    </div>
+    <button id="btnSearch" class="btn btn-primary">Search</button>
+  </div>
+  <div class="toolbar-right">
+    <button id="btnDashboard" class="btn btn-soft">Vezi Dashboard</button>
+    <button id="btnRefresh" class="btn btn-soft btn-icon gap">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"
+           viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+        <path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10M1 14l5.36 4.36A9 9 0 0 0 20.49 15"/>
+      </svg>
+      Refresh All
+    </button>
+  </div>
+</section>
+
+<!-- KPIs -->
+<section class="kpi-grid">
+  <div class="card">
+    <div class="kpi-label">Total Predictions</div>
+    <div id="kpi-total" class="kpi-value">-</div>
+  </div>
+  <div class="card">
+    <div class="kpi-label">Avg. Probability</div>
+    <div id="kpi-prob" class="kpi-value">-</div>
+  </div>
+  <div class="card">
+    <div class="kpi-label">Avg. Reward/Risk</div>
+    <div id="kpi-rr" class="kpi-value">-</div>
+  </div>
+  <div class="card">
+    <div class="kpi-label">Signals</div>
+    <div class="chips">
+      <span id="kpi-buy"  class="chip chip-buy">Buy: 0</span>
+      <span id="kpi-hold" class="chip chip-hold">Hold: 0</span>
+      <span id="kpi-sell" class="chip chip-sell">Sell: 0</span>
+    </div>
+  </div>
+</section>
+
+
+<!-- Quick add -->
+<section class="quick-add">
+  <div class="quick-row">
+    <input id="tickerInput" class="input w-40" placeholder="Ticker (ex: AAPL)" aria-label="Ticker (ex: AAPL)"/>
+    <input id="horizonInput" class="input w-28" type="number" min="1" max="90" value="7" placeholder="Horizon (days)" aria-label="Horizon (days)"/>
+    <button id="btnPredict" class="btn btn-gradient btn-icon gap">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="22 2 11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      Predict
+    </button>
+  </div>
+</section>
+
+<!-- Table -->
+<section class="table-surface">
+  <div class="table-scroll">
+    <table class="pro-table" role="grid" aria-label="Predictions table">
+      <thead>
+        <tr>
+          <th><button class="sort-btn" data-sort="ticker"      aria-sort="none">Symbol</button></th>
+          <th><button class="sort-btn" data-sort="price"       aria-sort="none">Current Price</button></th>
+          <th><button class="sort-btn" data-sort="prediction"  aria-sort="none">Prediction (%)</button></th>
+          <th><button class="sort-btn" data-sort="estprice"    aria-sort="none">Est. Price (7 days)</button></th>
+          <th><button class="sort-btn" data-sort="probability" aria-sort="none">Probability</button></th>
+          <th><button class="sort-btn" data-sort="outcome"     aria-sort="none">Win/Loss/Breakeven</button></th>
+          <th><button class="sort-btn" data-sort="rr"          aria-sort="none">Reward/Risk</button></th>
+          <th><button class="sort-btn" data-sort="signal"      aria-sort="none">Recommendation</button></th>
+          <th><button class="sort-btn" data-sort="date"        aria-sort="none">Date</button></th>
+          <th class="text-center">Details</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <!-- skeleton rows (shown until data) -->
+        <tr class="skeleton"><td colspan="10"></td></tr>
+        <tr class="skeleton"><td colspan="10"></td></tr>
+        <tr class="skeleton"><td colspan="10"></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- Pagination bar -->
+<section class="pager">
+  <div class="pager-left">
+    <span id="rowsInfo" class="muted">Showing 0–0 of 0</span>
+  </div>
+  <div class="pager-right">
+    <label class="muted" for="rowsPerPage">Rows:</label>
+    <select id="rowsPerPage" class="input rows-select" aria-label="Rows per page">
+      <option>10</option>
+      <option selected>15</option>
+      <option>25</option>
+      <option>50</option>
+    </select>
+    <button id="prevPage" class="btn btn-outline btn-icon" aria-label="Previous page">‹</button>
+    <span id="pageInfo" class="muted">Page 1 / 1</span>
+    <button id="nextPage" class="btn btn-outline btn-icon" aria-label="Next page">›</button>
+  </div>
+</section>
+
+
+<!-- Page script -->
+<script type="module" src="/static/js/pages/dashboard.js"></script>
+{% endblock %}
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\data\app.db [size: 20 KB] -----
+[binary skipped]
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\data\etoro_universe.csv [size: 0.06 KB] -----
+ticker
+AAPL
+MSFT
+AMZN
+TSLA
+NVDA
+META
+GOOGL
+AMD
+BABA
+NIO
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\README.md [size: 0.24 KB] -----
+# aibursa_v2
+
+Clean reboot for AI Stock Predictor.
+
+## Dev Quickstart
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+cp .env.example .env
+uvicorn app.main:app --reload
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\repo_manifest.txt [size: 803.42 KB] -----
+=== Repo Manifest 2025-08-19T05:18:02 ===
+branch: main
+commit: 4cde549
+
+--- GIT STATUS ---
+ M repo_manifest.txt
+
+--- GIT TREE (tracked) ---
+.env.example
+.github/workflows/ci.yml
+.gitignore
+README.md
+app/api/routes/health.py
+app/api/routes/market.py
+app/api/routes/ml.py
+app/api/routes/predictions.py
+app/api/routes/universe.py
+app/core/config.py
+app/core/logging.py
+app/db/__init__.py
+app/db/base.py
+app/db/models.py
+app/db/session.py
+app/main.py
+app/ml/calibration/frozen_calibrator.py
+app/ml/data/synth.py
+app/ml/features/indicators.py
+app/ml/pipeline/infer_service.py
+app/ml/pipeline/train_baseline.py
+app/schemas/prediction.py
+app/services/cache.py
+app/services/market_data.py
+app/services/ml_integration.py
+app/services/news_ingestor.py
+app/services/prediction_engine.py
+app/services/providers/alpha_vantage_provider.py
+app/services/providers/base.py
+app/services/providers/yahoo_provider.py
+app/services/universe.py
+app/ui/static/css/components.css
+app/ui/static/css/table.css
+app/ui/static/css/theme.css
+app/ui/static/js/components/details.js
+app/ui/static/js/components/modal.js
+app/ui/static/js/components/sparkline.js
+app/ui/static/js/components/toast.js
+app/ui/static/js/core/api.js
+app/ui/static/js/core/theme.js
+app/ui/static/js/core/utils.js
+app/ui/static/js/pages/dashboard.js
+app/ui/static/js/pages/fasttrade.js
+app/ui/templates/base.html
+app/ui/templates/fasttrade.html
+app/ui/templates/index.html
+data/etoro_universe.csv
+repo_manifest.txt
+requirements.txt
+roadmap.txt
+tests/test_predictions.py
+
+--- WORKING TREE (all files) ---
+Folder PATH listing
+Volume serial number is 3EED-DBC8
+C:.
+|   .env
+|   .env.example
+|   .gitignore
+|   aibursa_v2.db
+|   README.md
+|   repo_manifest.txt
+|   requirements.txt
+|   roadmap.txt
+|   
++---.github
+|   \---workflows
+|           ci.yml
+|           
++---.venv
+|   |   pyvenv.cfg
+|   |   
+|   +---Include
+|   |   \---site
+|   |       \---python3.10
+|   |           \---greenlet
+|   |                   greenlet.h
+|   |                   
+|   +---Lib
+|   |   \---site-packages
+|   |       |   distutils-precedence.pth
+|   |       |   numpy-2.2.6-cp310-cp310-win_amd64.whl
+|   |       |   peewee.py
+|   |       |   pwiz.py
+|   |       |   scipy-1.15.3-cp310-cp310-win_amd64.whl
+|   |       |   six.py
+|   |       |   threadpoolctl.py
+|   |       |   typing_extensions.py
+|   |       |   _cffi_backend.cp310-win_amd64.pyd
+|   |       |   
+|   |       +---alembic
+|   |       |   |   command.py
+|   |       |   |   config.py
+|   |       |   |   context.py
+|   |       |   |   context.pyi
+|   |       |   |   environment.py
+|   |       |   |   migration.py
+|   |       |   |   op.py
+|   |       |   |   op.pyi
+|   |       |   |   py.typed
+|   |       |   |   __init__.py
+|   |       |   |   __main__.py
+|   |       |   |   
+|   |       |   +---autogenerate
+|   |       |   |   |   api.py
+|   |       |   |   |   compare.py
+|   |       |   |   |   render.py
+|   |       |   |   |   rewriter.py
+|   |       |   |   |   __init__.py
+|   |       |   |   |   
+|   |       |   |   \---__pycache__
+|   |       |   |           api.cpython-310.pyc
+|   |       |   |           compare.cpython-310.pyc
+|   |       |   |           render.cpython-310.pyc
+|   |       |   |           rewriter.cpython-310.pyc
+|   |       |   |           __init__.cpython-310.pyc
+|   |       |   |           
+|   |       |   +---ddl
+|   |       |   |   |   base.py
+|   |       |   |   |   impl.py
+|   |       |   |   |   mssql.py
+|   |       |   |   |   mysql.py
+|   |       |   |   |   oracle.py
+|   |       |   |   |   postgresql.py
+|   |       |   |   |   sqlite.py
+|   |       |   |   |   _autogen.py
+|   |       |   |   |   __init__.py
+|   |       |   |   |   
+|   |       |   |   \---__pycache__
+|   |       |   |           base.cpython-310.pyc
+|   |       |   |           impl.cpython-310.pyc
+|   |       |   |           mssql.cpython-310.pyc
+|   |       |   |           mysql.cpython-310.pyc
+|   |       |   |           oracle.cpython-310.pyc
+|   |       |   |           postgresql.cpython-310.pyc
+|   |       |   |           sqlite.cpython-310.pyc
+|   |       |   |           _autogen.cpython-310.pyc
+|   |       |   |           __init__.cpython-310.pyc
+|   |       |   |           
+|   |       |   +---operations
+|   |       |   |   |   base.py
+|   |       |   |   |   batch.py
+|   |       |   |   |   ops.py
+|   |       |   |   |   schemaobj.py
+|   |       |   |   |   toimpl.py
+|   |       |   |   |   __init__.py
+|   |       |   |   |   
+|   |       |   |   \---__pycache__
+|   |       |   |           base.cpython-310.pyc
+|   |       |   |           batch.cpython-310.pyc
+|   |       |   |           ops.cpython-310.pyc
+|   |       |   |           schemaobj.cpython-310.pyc
+|   |       |   |           toimpl.cpython-310.pyc
+|   |       |   |           __init__.cpython-310.pyc
+|   |       |   |           
+|   |       |   +---runtime
+|   |       |   |   |   environment.py
+|   |       |   |   |   migration.py
+|   |       |   |   |   __init__.py
+|   |       |   |   |   
+|   |       |   |   \---__pycache__
+|   |       |   |           environment.cpython-310.pyc
+|   |       |   |           migration.cpython-310.pyc
+|   |       |   |           __init__.cpython-310.pyc
+|   |       |   |           
+|   |       |   +---script
+|   |       |   |   |   base.py
+|   |       |   |   |   revision.py
+|   |       |   |   |   write_hooks.py
+|   |       |   |   |   __init__.py
+|   |       |   |   |   
+|   |       |   |   \---__pycache__
+|   |       |   |           base.cpython-310.pyc
+|   |       |   |           revision.cpython-310.pyc
+|   |       |   |           write_hooks.cpython-310.pyc
+|   |       |   |           __init__.cpython-310.pyc
+|   |       |   |           
+|   |       |   +---templates
+|   |       |   |   +---async
+|   |       |   |   |   |   alembic.ini.mako
+|   |       |   |   |   |   env.py
+|   |       |   |   |   |   README
+|   |       |   |   |   |   script.py.mako
+|   |       |   |   |   |   
+|   |       |   |   |   \---__pycache__
+|   |       |   |   |           env.cpython-310.pyc
+|   |       |   |   |           
+|   |       |   |   +---generic
+|   |       |   |   |   |   alembic.ini.mako
+|   |       |   |   |   |   env.py
+|   |       |   |   |   |   README
+|   |       |   |   |   |   script.py.mako
+|   |       |   |   |   |   
+|   |       |   |   |   \---__pycache__
+|   |       |   |   |           env.cpython-310.pyc
+|   |       |   |   |           
+|   |       |   |   \---multidb
+|   |       |   |       |   alembic.ini.mako
+|   |       |   |       |   env.py
+|   |       |   |       |   README
+|   |       |   |       |   script.py.mako
+|   |       |   |       |   
+|   |       |   |       \---__pycache__
+|   |       |   |               env.cpython-310.pyc
+|   |       |   |               
+|   |       |   +---testing
+|   |       |   |   |   assertions.py
+|   |       |   |   |   env.py
+|   |       |   |   |   fixtures.py
+|   |       |   |   |   requirements.py
+|   |       |   |   |   schemacompare.py
+|   |       |   |   |   util.py
+|   |       |   |   |   warnings.py
+|   |       |   |   |   __init__.py
+|   |       |   |   |   
+|   |       |   |   +---plugin
+|   |       |   |   |   |   bootstrap.py
+|   |       |   |   |   |   __init__.py
+|   |       |   |   |   |   
+|   |       |   |   |   \---__pycache__
+|   |       |   |   |           bootstrap.cpython-310.pyc
+|   |       |   |   |           __init__.cpython-310.pyc
+|   |       |   |   |           
+|   |       |   |   +---suite
+|   |       |   |   |   |   test_autogen_comments.py
+|   |       |   |   |   |   test_autogen_computed.py
+|   |       |   |   |   |   test_autogen_diffs.py
+|   |       |   |   |   |   test_autogen_fks.py
+|   |       |   |   |   |   test_autogen_identity.py
+|   |       |   |   |   |   test_environment.py
+|   |       |   |   |   |   test_op.py
+|   |       |   |   |   |   _autogen_fixtures.py
+|   |       |   |   |   |   __init__.py
+|   |       |   |   |   |   
+|   |       |   |   |   \---__pycache__
+|   |       |   |   |           test_autogen_comments.cpython-310.pyc
+|   |       |   |   |           test_autogen_computed.cpython-310.pyc
+|   |       |   |   |           test_autogen_diffs.cpython-310.pyc
+|   |       |   |   |           test_autogen_fks.cpython-310.pyc
+|   |       |   |   |           test_autogen_identity.cpython-310.pyc
+|   |       |   |   |           test_environment.cpython-310.pyc
+|   |       |   |   |           test_op.cpython-310.pyc
+|   |       |   |   |           _autogen_fixtures.cpython-310.pyc
+|   |       |   |   |           __init__.cpython-310.pyc
+|   |       |   |   |           
+|   |       |   |   \---__pycache__
+|   |       |   |           assertions.cpython-310.pyc
+|   |       |   |           env.cpython-310.pyc
+|   |       |   |           fixtures.cpython-310.pyc
+|   |       |   |           requirements.cpython-310.pyc
+|   |       |   |           schemacompare.cpython-310.pyc
+|   |       |   |           util.cpython-310.pyc
+|   |       |   |           warnings.cpython-310.pyc
+|   |       |   |           __init__.cpython-310.pyc
+|   |       |   |           
+|   |       |   +---util
+|   |       |   |   |   compat.py
+|   |       |   |   |   editor.py
+|   |       |   |   |   exc.py
+|   |       |   |   |   langhelpers.py
+|   |       |   |   |   messaging.py
+|   |       |   |   |   pyfiles.py
+|   |       |   |   |   sqla_compat.py
+|   |       |   |   |   __init__.py
+|   |       |   |   |   
+|   |       |   |   \---__pycache__
+|   |       |   |           compat.cpython-310.pyc
+|   |       |   |           editor.cpython-310.pyc
+|   |       |   |           exc.cpython-310.pyc
+|   |       |   |           langhelpers.cpython-310.pyc
+|   |       |   |           messaging.cpython-310.pyc
+|   |       |   |           pyfiles.cpython-310.pyc
+|   |       |   |           sqla_compat.cpython-310.pyc
+|   |       |   |           __init__.cpython-310.pyc
+|   |       |   |           
+|   |       |   \---__pycache__
+|   |       |           command.cpython-310.pyc
+|   |       |           config.cpython-310.pyc
+|   |       |           context.cpython-310.pyc
+|   |       |           environment.cpython-310.pyc
+|   |       |           migration.cpython-310.pyc
+|   |       |           op.cpython-310.pyc
+|   |       |           __init__.cpython-310.pyc
+|   |       |           __main__.cpython-310.pyc
+|   |       |           
+|   |       +---alembic-1.13.2.dist-info
+|   |       |       entry_points.txt
+|   |       |       INSTALLER
+|   |       |       LICENSE
+|   |       |       METADATA
+|   |       |       RECORD
+|   |       |       REQUESTED
+|   |       |       top_level.txt
+|   |       |       WHEEL
+|   |       |       
+|   |       +---annotated_types
+|   |       |   |   py.typed
+|   |       |   |   test_cases.py
+|   |       |   |   __init__.py
+|   |       |   |   
+|   |       |   \---__pycache__
+|   |       |           test_cases.cpython-310.pyc
+|   |       |           __init__.cpython-310.pyc
+|   |       |           
+|   |       +---annotated_types-0.7.0.dist-info
+|   |       |   |   INSTALLER
+|   |       |   |   METADATA
+|   |       |   |   RECORD
+|   |       |   |   WHEEL
+|   |       |   |   
+|   |       |   \---licenses
+|   |       |           LICENSE
+|   |       |           
+|   |       +---anyio
+|   |       |   |   from_thread.py
+|   |       |   |   lowlevel.py
+|   |       |   |   py.typed
+|   |       |   |   pytest_plugin.py
+|   |       |   |   to_interpreter.py
+|   |       |   |   to_process.py
+|   |       |   |   to_thread.py
+|   |       |   |   __init__.py
+|   |       |   |   
+|   |       |   +---abc
+|   |       |   |   |   _eventloop.py
+|   |       |   |   |   _resources.py
+|   |       |   |   |   _sockets.py
+|   |       |   |   |   _streams.py
+|   |       |   |   |   _subprocesses.py
+|   |       |   |   |   _tasks.py
+|   |       |   |   |   _testing.py
+|   |       |   |   |   __init__.py
+|   |       |   |   |   
+|   |       |   |   \---__pycache__
+|   |       |   |           _eventloop.cpython-310.pyc
+|   |       |   |           _resources.cpython-310.pyc
+|   |       |   |           _sockets.cpython-310.pyc
+|   |       |   |           _streams.cpython-310.pyc
+|   |       |   |           _subprocesses.cpython-310.pyc
+|   |       |   |           _tasks.cpython-310.pyc
+|   |       |   |           _testing.cpython-310.pyc
+|   |       |   |           __init__.cpython-310.pyc
+|   |       |   |           
+|   |       |   +---streams
+|   |       |   |   |   buffered.py
+|   |       |   |   |   file.py
+|   |       |   |   |   memory.py
+|   |       |   |   |   stapled.py
+|   |       |   |   |   text.py
+|   |       |   |   |   tls.py
+|   |       |   |   |   __init__.py
+|   |       |   |   |   
+|   |       |   |   \---__pycache__
+|   |       |   |           buffered.cpython-310.pyc
+|   |       |   |           file.cpython-310.pyc
+|   |       |   |           memory.cpython-310.pyc
+|   |       |   |           stapled.cpython-310.pyc
+|   |       |   |           text.cpython-310.pyc
+|   |       |   |           tls.cpython-310.pyc
+|   |       |   |           __init__.cpython-310.pyc
+|   |       |   |           
+|   |       |   +---_backends
+|   |       |   |   |   _asyncio.py
+|   |       |   |   |   _trio.py
+|   |       |   |   |   __init__.py
+|   |       |   |   |   
+|   |       |   |   \---__pycache__
+|   |       |   |           _asyncio.cpython-310.pyc
+|   |       |   |           _trio.cpython-310.pyc
+|   |       |   |           __init__.cpython-310.pyc
+|   |       |   |           
+|   |       |   +---_core
+|   |       |   |   |   _asyncio_selector_thread.py
+|   |       |   |   |   _contextmanagers.py
+|   |       |   |   |   _eventloop.py
+|   |       |   |   |   _exceptions.py
+|   |       |   |   |   _fileio.py
+|   |       |   |   |   _resources.py
+|   |       |   |   |   _signals.py
+|   |       |   |   |   _sockets.py
+|   |       |   |   |   _streams.py
+|   |       |   |   |   _subprocesses.py
+|   |       |   |   |   _synchronization.py
+|   |       |   |   |   _tasks.py
+|   |       |   |   |   _tempfile.py
+|   |       |   |   |   _testing.py
+|   |       |   |   |   _typedattr.py
+|   |       |   |   |   __init__.py
+|   |       |   |   |   
+|   |       |   |   \---__pycache__
+|   |       |   |           _asyncio_selector_thread.cpython-310.pyc
+|   |       |   |           _contextmanagers.cpython-310.pyc
+|   |       |   |           _eventloop.cpython-310.pyc
+|   |       |   |           _exceptions.cpython-310.pyc
+|   |       |   |           _fileio.cpython-310.pyc
+|   |       |   |           _resources.cpython-310.pyc
+|   |       |   |           _signals.cpython-310.pyc
+|   |       |   |           _sockets.cpython-310.pyc
+|   |       |   |           _streams.cpython-310.pyc
+|   |       |   |           _subprocesses.cpython-310.pyc
+|   |       |   |           _synchronization.cpython-310.pyc
+|   |       |   |           _tasks.cpython-310.pyc
+|   |       |   |           _tempfile.cpython-310.pyc
+|   |       |   |           _testing.cpython-310.pyc
+|   |       |   |           _typedattr.cpython-310.pyc
+|   |       |   |           __init__.cpython-310.pyc
+|   |       |   |           
+|   |       |   \---__pycache__
+|   |       |           from_thread.cpython-310.pyc
+|   |       |           lowlevel.cpython-310.pyc
+|   |       |           pytest_plugin.cpython-310.pyc
+|   |       |           to_interpreter.cpython-310.pyc
+|   |       |           to_process.cpython-310.pyc
+|   |       |           to_thread.cpython-310.pyc
+|   |       |           __init__.cpython-310.pyc
+|   |       |           
+|   |       +---anyio-4.10.0.dist-info
+|   |       |   |   entry_points.txt
+|   |       |   |   INSTALLER
+|   |       |   |   METADATA
+|   |       |   |   RECORD
+|   |       |   |   top_level.txt
+|   |       |   |   WHEEL
+|   |       |   |   
+|   |       |   \---licenses
+|   |       |           LICENSE
+|   |       |           
+|   |       +---beautifulsoup4-4.13.4.dist-info
+|   |       |   |   INSTALLER
+|   |       |   |   METADATA
+|   |       |   |   RECORD
+|   |       |   |   WHEEL
+|   |       |   |   
+|   |       |   \---licenses
+|   |       |           AUTHORS
+|   |       |           LICENSE
+|   |       |           
+|   |       +---bs4
+|   |       |   |   css.py
+|   |       |   |   dammit.py
+|   |       |   |   diagnose.py
+|   |       |   |   element.py
+|   |       |   |   exceptions.py
+|   |       |   |   filter.py
+|   |       |   |   formatter.py
+|   |       |   |   py.typed
+|   |       |   |   _deprecation.py
+|   |       |   |   _typing.py
+|   |       |   |   _warnings.py
+|   |       |   |   __init__.py
+|   |       |   |   
+|   |       |   +---builder
+|   |       |   |   |   _html5lib.py
+|   |       |   |   |   _htmlparser.py
+|   |       |   |   |   _lxml.py
+|   |       |   |   |   __init__.py
+|   |       |   |   |   
+|   |       |   |   \---__pycache__
+|   |       |   |           _html5lib.cpython-310.pyc
+|   |       |   |           _htmlparser.cpython-310.pyc
+|   |       |   |           _lxml.cpython-310.pyc
+|   |       |   |           __init__.cpython-310.pyc
+|   |       |   |           
+|   |       |   +---tests
+|   |       |   |   |   test_builder.py
+|   |       |   |   |   test_builder_registry.py
+|   |       |   |   |   test_css.py
+|   |       |   |   |   test_dammit.py
+|   |       |   |   |   test_element.py
+|   |       |   |   |   test_filter.py
+|   |       |   |   |   test_formatter.py
+|   |       |   |   |   test_fuzz.py
+|   |       |   |   |   test_html5lib.py
+|   |       |   |   |   test_htmlparser.py
+|   |       |   |   |   test_lxml.py
+|   |       |   |   |   test_navigablestring.py
+|   |       |   |   |   test_pageelement.py
+|   |       |   |   |   test_soup.py
+|   |       |   |   |   test_tag.py
+|   |       |   |   |   test_tree.py
+|   |       |   |   |   __init__.py
+|   |       |   |   |   
+|   |       |   |   +---fuzz
+|   |       |   |   |       clusterfuzz-testcase-minimized-bs4_fuzzer-4670634698080256.testcase
+|   |       |   |   |       clusterfuzz-testcase-minimized-bs4_fuzzer-4818336571064320.testcase
+|   |       |   |   |       clusterfuzz-testcase-minimized-bs4_fuzzer-4999465949331456.testcase
+|   |       |   |   |       clusterfuzz-testcase-minimized-bs4_fuzzer-5000587759190016.testcase
+|   |       |   |   |       clusterfuzz-testcase-minimized-bs4_fuzzer-5167584867909632.testcase
+|   |       |   |   |       clusterfuzz-testcase-minimized-bs4_fuzzer-5270998950477824.testcase
+|   |       |   |   |       clusterfuzz-testcase-minimized-bs4_fuzzer-5375146639360000.testcase
+|   |       |   |   |       clusterfuzz-testcase-minimized-bs4_fuzzer-5492400320282624.testcase
+|   |       |   |   |       clusterfuzz-testcase-minimized-bs4_fuzzer-5703933063462912.testcase
+|   |       |   |   |       clusterfuzz-testcase-minimized-bs4_fuzzer-5843991618256896.testcase
+|   |       |   |   |       clusterfuzz-testcase-minimized-bs4_fuzzer-5984173902397440.testcase
+|   |       |   |   |       clusterfuzz-testcase-minimized-bs4_fuzzer-6124268085182464.testcase
+|   |       |   |   |       clusterfuzz-testcase-minimized-bs4_fuzzer-6241471367348224.testcase
+|   |       |   |   |       clusterfuzz-testcase-minimized-bs4_fuzzer-6306874195312640.testcase
+|   |       |   |   |       clusterfuzz-testcase-minimized-bs4_fuzzer-6450958476902400.testcase
+|   |       |   |   |       clusterfuzz-testcase-minimized-bs4_fuzzer-6600557255327744.testcase
+|   |       |   |   |       crash-0d306a50c8ed8bcd0785b67000fcd5dea1d33f08.testcase
+|   |       |   |   |       crash-ffbdfa8a2b26f13537b68d3794b0478a4090ee4a.testcase
+|   |       |   |   |       
+|   |       |   |   \---__pycache__
+|   |       |   |           test_builder.cpython-310.pyc
+|   |       |   |           test_builder_registry.cpython-310.pyc
+|   |       |   |           test_css.cpython-310.pyc
+|   |       |   |           test_dammit.cpython-310.pyc
+|   |       |   |           test_element.cpython-310.pyc
+|   |       |   |           test_filter.cpython-310.pyc
+|   |       |   |           test_formatter.cpython-310.pyc
+|   |       |   |           test_fuzz.cpython-310.pyc
+|   |       |   |           test_html5lib.cpython-310.pyc
+|   |       |   |           test_htmlparser.cpython-310.pyc
+|   |       |   |           test_lxml.cpython-310.pyc
+|   |       |   |           test_navigablestring.cpython-310.pyc
+|   |       |   |           test_pageelement.cpython-310.pyc
+|   |       |   |           test_soup.cpython-310.pyc
+|   |       |   |           test_tag.cpython-310.pyc
+|   |       |   |           test_tree.cpython-310.pyc
+|   |       |   |           __init__.cpython-310.pyc
+|   |       |   |           
+|   |       |   \---__pycache__
+|   |       |           css.cpython-310.pyc
+|   |       |           dammit.cpython-310.pyc
+|   |       |           diagnose.cpython-310.pyc
+|   |       |           element.cpython-310.pyc
+|   |       |           exceptions.cpython-310.pyc
+|   |       |           filter.cpython-310.pyc
+|   |       |           formatter.cpython-310.pyc
+|   |       |           _deprecation.cpython-310.pyc
+|   |       |           _typing.cpython-310.pyc
+|   |       |           _warnings.cpython-310.pyc
+|   |       |           __init__.cpython-310.pyc
+|   |       |           
+|   |       +---certifi
+|   |       |   |   cacert.pem
+|   |       |   |   core.py
+|   |       |   |   py.typed
+|   |       |   |   __init__.py
+|   |       |   |   __main__.py
+|   |       |   |   
+|   |       |   \---__pycache__
+|   |       |           core.cpython-310.pyc
+|   |       |           __init__.cpython-310.pyc
+|   |       |           __main__.cpython-310.pyc
+|   |       |           
+|   |       +---certifi-2025.8.3.dist-info
+|   |       |   |   INSTALLER
+|   |       |   |   METADATA
+|   |       |   |   RECORD
+|   |       |   |   top_level.txt
+|   |       |   |   WHEEL
+|   |       |   |   
+|   |       |   \---licenses
+|   |       |           LICENSE
+|   |       |           
+|   |       +---cffi
+|   |       |   |   api.py
+|   |       |   |   backend_ctypes.py
+|   |       |   |   cffi_opcode.py
+|   |       |   |   commontypes.py
+|   |       |   |   cparser.py
+|   |       |   |   error.py
+|   |       |   |   ffiplatform.py
+|   |       |   |   lock.py
+|   |       |   |   model.py
+|   |       |   |   parse_c_type.h
+|   |       |   |   pkgconfig.py
+|   |       |   |   recompiler.py
+|   |       |   |   setuptools_ext.py
+|   |       |   |   vengine_cpy.py
+|   |       |   |   vengine_gen.py
+|   |       |   |   verifier.py
+|   |       |   |   _cffi_errors.h
+|   |       |   |   _cffi_include.h
+|   |       |   |   _embedding.h
+|   |       |   |   _imp_emulation.py
+|   |       |   |   _shimmed_dist_utils.py
+|   |       |   |   __init__.py
+|   |       |   |   
+|   |       |   \---__pycache__
+|   |       |           api.cpython-310.pyc
+|   |       |           backend_ctypes.cpython-310.pyc
+|   |       |           cffi_opcode.cpython-310.pyc
+|   |       |           commontypes.cpython-310.pyc
+|   |       |           cparser.cpython-310.pyc
+|   |       |           error.cpython-310.pyc
+|   |       |           ffiplatform.cpython-310.pyc
+|   |       |           lock.cpython-310.pyc
+|   |       |           model.cpython-310.pyc
+|   |       |           pkgconfig.cpython-310.pyc
+|   |       |           recompiler.cpython-310.pyc
+|   |       |           setuptools_ext.cpython-310.pyc
+|   |       |           vengine_cpy.cpython-310.pyc
+|   |       |           vengine_gen.cpython-310.pyc
+|   |       |           verifier.cpython-310.pyc
+|   |       |           _imp_emulation.cpython-310.pyc
+|   |       |           _shimmed_dist_utils.cpython-310.pyc
+|   |       |           __init__.cpython-310.pyc
+|   |       |           
+|   |       +---cffi-1.17.1.dist-info
+|   |       |       entry_points.txt
+|   |       |       INSTALLER
+|   |       |       LICENSE
+|   |       |       METADATA
+|   |       |       RECORD
+|   |       |       top_level.txt
+|   |       |       WHEEL
+|   |       |       
+|   |       +---charset_normalizer
+|   |       |   |   api.py
+|   |       |   |   cd.py
+|   |       |   |   constant.py
+|   |       |   |   legacy.py
+|   |       |   |   md.cp310-win_amd64.pyd
+|   |       |   |   md.py
+|   |       |   |   md__mypyc.cp310-win_amd64.pyd
+|   |       |   |   models.py
+|   |       |   |   py.typed
+|   |       |   |   utils.py
+|   |       |   |   version.py
+|   |       |   |   __init__.py
+|   |       |   |   __main__.py
+|   |       |   |   
+|   |       |   +---cli
+|   |       |   |   |   __init__.py
+|   |       |   |   |   __main__.py
+|   |       |   |   |   
+|   |       |   |   \---__pycache__
+|   |       |   |           __init__.cpython-310.pyc
+|   |       |   |           __main__.cpython-310.pyc
+|   |       |   |           
+|   |       |   \---__pycache__
+|   |       |           api.cpython-310.pyc
+|   |       |           cd.cpython-310.pyc
+|   |       |           constant.cpython-310.pyc
+|   |       |           legacy.cpython-310.pyc
+|   |       |           md.cpython-310.pyc
+|   |       |           models.cpython-310.pyc
+|   |       |           utils.cpython-310.pyc
+|   |       |           version.cpython-310.pyc
+|   |       |           __init__.cpython-310.pyc
+|   |       |           __main__.cpython-310.pyc
+|   |       |           
+|   |       +---charset_normalizer-3.4.3.dist-info
+|   |       |   |   entry_points.txt
+|   |       |   |   INSTALLER
+|   |       |   |   METADATA
+|   |       |   |   RECORD
+|   |       |   |   top_level.txt
+|   |       |   |   WHEEL
+|   |       |   |   
+|   |       |   \---licenses
+|   |       |           LICENSE
+|   |       |           
+|   |       +---click
+|   |       |   |   core.py
+|   |       |   |   decorators.py
+|   |       |   |   exceptions.py
+|   |       |   |   formatting.py
+|   |       |   |   globals.py
+|   |       |   |   parser.py
+|   |       |   |   py.typed
+|   |       |   |   shell_completion.py
+|   |       |   |   termui.py
+|   |       |   |   testing.py
+|   |       |   |   types.py
+|   |       |   |   utils.py
+|   |       |   |   _compat.py
+|   |       |   |   _termui_impl.py
+|   |       |   |   _textwrap.py
+|   |       |   |   _winconsole.py
+|   |       |   |   __init__.py
+|   |       |   |   
+|   |       |   \---__pycache__
+|   |       |           core.cpython-310.pyc
+|   |       |           decorators.cpython-310.pyc
+|   |       |           exceptions.cpython-310.pyc
+|   |       |           formatting.cpython-310.pyc
+|   |       |           globals.cpython-310.pyc
+|   |       |           parser.cpython-310.pyc
+|   |       |           shell_completion.cpython-310.pyc
+|   |       |           termui.cpython-310.pyc
+|   |       |           testing.cpython-310.pyc
+|   |       |           types.cpython-310.pyc
+|   |       |           utils.cpython-310.pyc
+|   |       |           _compat.cpython-310.pyc
+|   |       |           _termui_impl.cpython-310.pyc
+|   |       |           _textwrap.cpython-310.pyc
+|   |       |           _winconsole.cpython-310.pyc
+|   |       |           __init__.cpython-310.pyc
+|   |       |           
+|   |       +---click-8.2.1.dist-info
+|   |       |   |   INSTALLER
+|   |       |   |   METADATA
+|   |       |   |   RECORD
+|   |       |   |   WHEEL
+|   |       |   |   
+|   |       |   \---licenses
+|   |       |           LICENSE.txt
+|   |       |           
+|   |       +---colorama
+|   |       |   |   ansi.py
+|   |       |   |   ansitowin32.py
+|   |       |   |   initialise.py
+|   |       |   |   win32.py
+|   |       |   |   winterm.py
+|   |       |   |   __init__.py
+|   |       |   |   
+|   |       |   +---tests
+|   |       |   |   |   ansitowin32_test.py
+|   |       |   |   |   ansi_test.py
+|   |       |   |   |   initialise_test.py
+|   |       |   |   |   isatty_test.py
+|   |       |   |   |   utils.py
+|   |       |   |   |   winterm_test.py
+|   |       |   |   |   __init__.py
+|   |       |   |   |   
+|   |       |   |   \---__pycache__
+|   |       |   |           ansitowin32_test.cpython-310.pyc
+|   |       |   |           ansi_test.cpython-310.pyc
+|   |       |   |           initialise_test.cpython-310.pyc
+|   |       |   |           isatty_test.cpython-310.pyc
+|   |       |   |           utils.cpython-310.pyc
+|   |       |   |           winterm_test.cpython-310.pyc
+|   |       |   |           __init__.cpython-310.pyc
+|   |       |   |           
+|   |       |   \---__pycache__
+|   |       |           ansi.cpython-310.pyc
+|   |       |           ansitowin32.cpython-310.pyc
+|   |       |           initialise.cpython-310.pyc
+|   |       |           win32.cpython-310.pyc
+|   |       |           winterm.cpython-310.pyc
+|   |       |           __init__.cpython-310.pyc
+|   |       |           
+|   |       +---colorama-0.4.6.dist-info
+|   |       |   |   INSTALLER
+|   |       |   |   METADATA
+|   |       |   |   RECORD
+|   |       |   |   WHEEL
+|   |       |   |   
+|   |       |   \---licenses
+|   |       |           LICENSE.txt
+|   |       |           
+|   |       +---curl_cffi
+|   |       |   |   aio.py
+|   |       |   |   const.py
+|   |       |   |   curl.py
+|   |       |   |   py.typed
+|   |       |   |   utils.py
+|   |       |   |   _asyncio_selector.py
+|   |       |   |   _wrapper.pyd
+|   |       |   |   __init__.py
+|   |       |   |   __version__.py
+|   |       |   |   
+|   |       |   +---requests
+|   |       |   |   |   cookies.py
+|   |       |   |   |   errors.py
+|   |       |   |   |   exceptions.py
+|   |       |   |   |   headers.py
+|   |       |   |   |   impersonate.py
+|   |       |   |   |   models.py
+|   |       |   |   |   session.py
+|   |       |   |   |   utils.py
+|   |       |   |   |   websockets.py
+|   |       |   |   |   __init__.py
+|   |       |   |   |   
+|   |       |   |   \---__pycache__
+|   |       |   |           cookies.cpython-310.pyc
+|   |       |   |           errors.cpython-310.pyc
+|   |       |   |           exceptions.cpython-310.pyc
+|   |       |   |           headers.cpython-310.pyc
+|   |       |   |           impersonate.cpython-310.pyc
+|   |       |   |           models.cpython-310.pyc
+|   |       |   |           session.cpython-310.pyc
+|   |       |   |           utils.cpython-310.pyc
+|   |       |   |           websockets.cpython-310.pyc
+|   |       |   |           __init__.cpython-310.pyc
+|   |       |   |           
+|   |       |   \---__pycache__
+|   |       |           aio.cpython-310.pyc
+|   |       |           const.cpython-310.pyc
+|   |       |           curl.cpython-310.pyc
+|   |       |           utils.cpython-310.pyc
+|   |       |           _asyncio_selector.cpython-310.pyc
+|   |       |           __init__.cpython-310.pyc
+|   |       |           __version__.cpython-310.pyc
+|   |       |           
+|   |       +---curl_cffi-0.13.0.dist-info
+|   |       |   |   INSTALLER
+|   |       |   |   METADATA
+|   |       |   |   RECORD
+|   |       |   |   top_level.txt
+|   |       |   |   WHEEL
+|   |       |   |   
+|   |       |   \---licenses
+|   |       |           LICENSE
+|   |       |           
+|   |       +---dateutil
+|   |       |   |   easter.py
+|   |       |   |   relativedelta.py
+|   |       |   |   rrule.py
+|   |       |   |   tzwin.py
+|   |       |   |   utils.py
+|   |       |   |   _common.py
+|   |       |   |   _version.py
+|   |       |   |   __init__.py
+|   |       |   |   
+|   |       |   +---parser
+|   |       |   |   |   isoparser.py
+|   |       |   |   |   _parser.py
+|   |       |   |   |   __init__.py
+|   |       |   |   |   
+|   |       |   |   \---__pycache__
+|   |       |   |           isoparser.cpython-310.pyc
+|   |       |   |           _parser.cpython-310.pyc
+|   |       |   |           __init__.cpython-310.pyc
+|   |       |   |           
+|   |       |   +---tz
+|   |       |   |   |   tz.py
+|   |       |   |   |   win.py
+|   |       |   |   |   _common.py
+|   |       |   |   |   _factories.py
+|   |       |   |   |   __init__.py
+|   |       |   |   |   
+|   |       |   |   \---__pycache__
+|   |       |   |           tz.cpython-310.pyc
+|   |       |   |           win.cpython-310.pyc
+|   |       |   |           _common.cpython-310.pyc
+|   |       |   |           _factories.cpython-310.pyc
+|   |       |   |           __init__.cpython-310.pyc
+|   |       |   |           
+|   |       |   +---zoneinfo
+|   |       |   |   |   dateutil-zoneinfo.tar.gz
+|   |       |   |   |   rebuild.py
+|   |       |   |   |   __init__.py
+|   |       |   |   |   
+|   |       |   |   \---__pycache__
+|   |       |   |           rebuild.cpython-310.pyc
+|   |       |   |           __init__.cpython-310.pyc
+|   |       |   |           
+|   |       |   \---__pycache__
+|   |       |           easter.cpython-310.pyc
+|   |       |           relativedelta.cpython-310.pyc
+|   |       |           rrule.cpython-310.pyc
+|   |       |           tzwin.cpython-310.pyc
+|   |       |           utils.cpython-310.pyc
+|   |       |           _common.cpython-310.pyc
+|   |       |           _version.cpython-310.pyc
+|   |       |           __init__.cpython-310.pyc
+|   |       |           
+|   |       +---dotenv
+|   |       |   |   cli.py
+|   |       |   |   ipython.py
+|   |       |   |   main.py
+|   |       |   |   parser.py
+|   |       |   |   py.typed
+|   |       |   |   variables.py
+|   |       |   |   version.py
+|   |       |   |   __init__.py
+|   |       |   |   __main__.py
+|   |       |   |   
+|   |       |   \---__pycache__
+|   |       |           cli.cpython-310.pyc
+|   |       |           ipython.cpython-310.pyc
+|   |       |           main.cpython-310.pyc
+|   |       |           parser.cpython-310.pyc
+|   |       |           variables.cpython-310.pyc
+|   |       |           version.cpython-310.pyc
+|   |       |           __init__.cpython-310.pyc
+|   |       |           __main__.cpython-310.pyc
+|   |       |           
+|   |       +---exceptiongroup
+|   |       |   |   py.typed
+|   |       |   |   _catch.py
+|   |       |   |   _exceptions.py
+|   |       |   |   _formatting.py
+|   |       |   |   _suppress.py
+|   |       |   |   _version.py
+|   |       |   |   __init__.py
+|   |       |   |   
+|   |       |   \---__pycache__
+|   |       |           _catch.cpython-310.pyc
+|   |       |           _exceptions.cpython-310.pyc
+|   |       |           _formatting.cpython-310.pyc
+|   |       |           _suppress.cpython-310.pyc
+|   |       |           _version.cpython-310.pyc
+|   |       |           __init__.cpython-310.pyc
+|   |       |           
+|   |       +---exceptiongroup-1.3.0.dist-info
+|   |       |   |   INSTALLER
+|   |       |   |   METADATA
+|   |       |   |   RECORD
+|   |       |   |   WHEEL
+|   |       |   |   
+|   |       |   \---licenses
+|   |       |           LICENSE
+|   |       |           
+|   |       +---fastapi
+|   |       |   |   applications.py
+|   |       |   |   background.py
+|   |       |   |   cli.py
+|   |       |   |   concurrency.py
+|   |       |   |   datastructures.py
+|   |       |   |   encoders.py
+|   |       |   |   exceptions.py
+|   |       |   |   exception_handlers.py
+|   |       |   |   logger.py
+|   |       |   |   params.py
+|   |       |   |   param_functions.py
+|   |       |   |   py.typed
+|   |       |   |   requests.py
+|   |       |   |   responses.py
+|   |       |   |   routing.py
+|   |       |   |   staticfiles.py
+|   |       |   |   templating.py
+|   |       |   |   testclient.py
+|   |       |   |   types.py
+|   |       |   |   utils.py
+|   |       |   |   websockets.py
+|   |       |   |   _compat.py
+|   |       |   |   __init__.py
+|   |       |   |   __main__.py
+|   |       |   |   
+|   |       |   +---dependencies
+|   |       |   |   |   models.py
+|   |       |   |   |   utils.py
+|   |       |   |   |   __init__.py
+|   |       |   |   |   
+|   |       |   |   \---__pycache__
+|   |       |   |           models.cpython-310.pyc
+|   |       |   |           utils.cpython-310.pyc
+|   |       |   |           __init__.cpython-310.pyc
+|   |       |   |           
+|   |       |   +---middleware
+|   |       |   |   |   cors.py
+|   |       |   |   |   gzip.py
+|   |       |   |   |   httpsredirect.py
+|   |       |   |   |   trustedhost.py
+|   |       |   |   |   wsgi.py
+|   |       |   |   |   __init__.py
+|   |       |   |   |   
+|   |       |   |   \---__pycache__
+|   |       |   |           cors.cpython-310.pyc
+|   |       |   |           gzip.cpython-310.pyc
+|   |       |   |           httpsredirect.cpython-310.pyc
+|   |       |   |           trustedhost.cpython-310.pyc
+|   |       |   |           wsgi.cpython-310.pyc
+|   |       |   |           __init__.cpython-310.pyc
+|   |       |   |           
+|   |       |   +---openapi
+|   |       |   |   |   constants.py
+|   |       |   |   |   docs.py
+|   |       |   |   |   models.py
+|   |       |   |   |   utils.py
+|   |       |   |   |   __init__.py
+|   |       |   |   |   
+|   |       |   |   \---__pycache__
+|   |       |   |           constants.cpython-310.pyc
+|   |       |   |           docs.cpython-310.pyc
+|   |       |   |           models.cpython-310.pyc
+|   |       |   |           utils.cpython-310.pyc
+|   |       |   |           __init__.cpython-310.pyc
+|   |       |   |           
+|   |       |   +---security
+|   |       |   |   |   api_key.py
+|   |       |   |   |   base.py
+|   |       |   |   |   http.py
+|   |       |   |   |   oauth2.py
+|   |       |   |   |   open_id_connect_url.py
+|   |       |   |   |   utils.py
+|   |       |   |   |   __init__.py
+|   |       |   |   |   
+|   |       |   |   \---__pycache__
+|   |       |   |           api_key.cpython-310.pyc
+|   |       |   |           base.cpython-310.pyc
+|   |       |   |           http.cpython-310.pyc
+|   |       |   |           oauth2.cpython-310.pyc
+|   |       |   |           open_id_connect_url.cpython-310.pyc
+|   |       |   |           utils.cpython-310.pyc
+|   |       |   |           __init__.cpython-310.pyc
+|   |       |   |           
+|   |       |   \---__pycache__
+|   |       |           applications.cpython-310.pyc
+|   |       |           background.cpython-310.pyc
+|   |       |           cli.cpython-310.pyc
+|   |       |           concurrency.cpython-310.pyc
+|   |       |           datastructures.cpython-310.pyc
+|   |       |           encoders.cpython-310.pyc
+|   |       |           exceptions.cpython-310.pyc
+|   |       |           exception_handlers.cpython-310.pyc
+|   |       |           logger.cpython-310.pyc
+
+...[TRUNCATED after first 1000 lines]
+
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\requirements.txt [size: 0.28 KB] -----
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+pydantic==2.8.2
+pydantic-settings==2.4.0
+SQLAlchemy==2.0.34
+jinja2==3.1.4
+httpx==0.27.0
+python-dotenv==1.0.1
+loguru==0.7.2
+alembic==1.13.2
+pandas==2.2.2
+numpy>=1.26.0
+joblib>=1.3.0
+yfinance>=0.2.40
+httpx>=0.27.0
+scikit-learn>=1.6.0
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\roadmap.txt [size: 6.31 KB] -----
+| #  | Upgrade                                                          | Impact Acuratețe | Impact Realism | Efort | Integrare în proiect                                                                               | Riscuri / Pitfalls                                               |
+| -- | ---------------------------------------------------------------- | ---------------: | -------------: | ----: | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| 1  | **Pipeline ground-truth & outcomes** (ingest automat la T+H)     |                3 |              4 |     2 | Task zilnic + tabel `prediction_outcome`; hook în `/api/predictions` să marcheze batch-ul „închis” | aliniere cu calendarul bursier; timpii de închidere piață        |
+| 2  | **Calibrare online** (Platt / Bayesian binning)                  |                3 |          **5** |     2 | mic serviciu care re-calibrează scorurile pe fereastra recentă; salvăm `calibrator_H.joblib`       | supra-ajustare pe ultimele săpt.; folosește ferestre ≥ 6–12 luni |
+| 3  | **Optimizer EV (thresholds Buy/Hold/Sell)** pe fereastră rulantă |            **4** |              4 |     3 | modul „policy” care caută praguri prob/exp/RR ce maximiză EV după costuri; persistă în `.json`     | supra-optimizare; introduce „smoothing” pe parametri             |
+| 4  | **Retrain warm-start săptămânal** (recency weighting)            |            **4** |              3 |     3 | job programat; folosește init\_model (LightGBM/CatBoost) + sample weights                          | drift brusc → degradează; ține și un model „last-known-good”     |
+| 5  | **Drift detection** (PSI/KS/ADWIN) + auto-retrain                |                2 |              3 |     2 | serviciu mic care calculează drift metrics și declanșează retrain                                  | alarme false; setează praguri realiste și guardrails             |
+| 6  | **Quantile regression + Conformal bands** (q10/q50/q90)          |                3 |          **5** |     4 | antrenăm heads de cuantile; la inferență dăm intervale; R\:R din cuantile                          | cost compute mai mare; atenție la „extrapolare” în cozi          |
+| 7  | **Ensemble & bandit** (ponderi online pentru modele)             |                4 |              3 |     4 | agregăm 2–3 modele (GBM, CatBoost, TFT) cu **Thompson sampling** pe EV                             | instabil dacă semnalele sunt corelate; pune „cap” pe schimbări   |
+| 8  | **Cost model dinamic** (spread/slippage = k·ATR + lichiditate)   |                2 |          **5** |     2 | serviciu care estimează costuri per ticker/regim; feed în EV                                       | subestimarea costurilor distruge EV; validați pe execuții reale  |
+| 9  | **Backtest event-driven corect** (execuție T+1, costuri)         |                3 |          **5** |     3 | înlocuiește backtest naïv; rapoarte PF/Sharpe/DD per orizont                                       | „look-ahead” accidental; teste automate anti-leakage             |
+| 10 | **Regimuri de piață** (vol/credit) + modele per regim            |                3 |              3 |     4 | clasificator de regim; comută model sau praguri                                                    | overfit pe definirea regimului; comutare prea frecventă          |
+| 11 | **NSDQ intraday micro-model** (1–5m) + WS 5s                     |                4 |              2 |     4 | model logistic/GBM mic; features micro-structură; canal WS                                         | latență & rate-limit la furnizor; evaluare intraday realistă     |
+| 12 | **News & Macro → features** (shock, sentiment, policy)           |            **4** |              3 |     4 | pipeline MIE: evenimente → scor impact → variabile X(H)                                            | licențe știri, dedup; etichetare „surpriză” corectă              |
+| 13 | **SHAP stability & pruning** (feature hygiene)                   |                2 |              2 |     2 | raport SHAP periodic; scoatem feature-uri instabile                                                | eliminarea greșită a unor semnale; folosește criterii robuste    |
+| 14 | **Optuna tuning lunar** (num\_leaves/depth/lr etc.)              |                3 |              1 |     3 | worker cu triaj rapid (20–50 trials) pe ferestre recente                                           | consum compute; scade revenirile dacă datele se schimbă rapid    |
+| 15 | **Meta-calibrare pe segmente** (sector/vol/clustere)             |                2 |          **4** |     3 | păstrăm calibratori separați pe clustere; selectăm la inferență                                    | complexitate; riscul de sample-size mic per cluster              |
+| 16 | **Consolidare Feature Store** (Parquet, snapshot P.I.T.)         |                2 |              3 |     3 | versiuni + snapshot time-travel; reproducibilitate 100%                                            | spațiu disc; disciplină strictă la generare                      |
+| 17 | **Threshold guardrails** (reguli de risc la decizie)             |                2 |              3 |     1 | minim/maximum expunere, max DD zilnic, stop auto                                                   | prea conservator → sub-utilizezi semnalele                       |
+| 18 | **Traiectorii 1..14d** (MC din cuantile)                         |                3 |          **4** |     2 | funcție de compunere geometrică + MC 1k pentru prob\_7d                                            | presupuneri de independență; folosește corelație serială simplă  |
+| 19 | **Monitoring metrice online** (Brier, ECE, CRPS, EV live)        |                2 |          **4** |     2 | Prometheus/Grafana; praguri + alerte                                                               | „metric drift” neinterpretat → alert fatigue                     |
+| 20 | **Human-in-the-loop** (revizuire edge cases)                     |                1 |              2 |     2 | UI intern pt. tag-uri pe evenimente/erori mari                                                     | bias uman; păstrează doar feedback „hard” verificabil            |
+
+----- C:\Users\patri\OneDrive\Desktop\aibursa_v2\tests\test_predictions.py [size: 0.46 KB] -----
+from fastapi.testclient import TestClient
+from app.main import app
+
+client = TestClient(app)
+
+def test_create_and_list_prediction():
+    r = client.post("/api/predictions", json={"ticker": "AAPL", "horizon_days": 7})
+    assert r.status_code == 200, r.text
+    data = r.json()
+    assert data["ticker"] == "AAPL"
+    r2 = client.get("/api/predictions")
+    assert r2.status_code == 200
+    arr = r2.json()
+    assert any(x["id"] == data["id"] for x in arr)
