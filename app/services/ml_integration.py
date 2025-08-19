@@ -5,6 +5,9 @@ import pandas as pd
 from app.services.market_data import get_history
 from app.ml.pipeline.train_baseline import TrainConfig, train_on_dataframe
 from app.ml.pipeline.infer_service import predict_from_candles
+import os
+from joblib import load
+
 
 def _history_df(ticker: str, period: str, interval: str) -> pd.DataFrame:
     js = get_history(ticker, period, interval)  # list[dict]
