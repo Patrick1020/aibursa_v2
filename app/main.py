@@ -13,6 +13,8 @@ from app.api.routes.health import router as health_router
 from app.api.routes.predictions import router as predictions_router
 from app.api.routes.market import router as market_router
 from app.api.routes.ml import router as ml_router
+from app.api.routes.universe import router as universe_router
+
 
 Base.metadata.create_all(bind=engine)
 
@@ -47,6 +49,7 @@ def fast_trade(request: Request):
 app.include_router(health_router)
 app.include_router(predictions_router)
 app.include_router(market_router)
+app.include_router(universe_router)
 app.include_router(ml_router)
 
 

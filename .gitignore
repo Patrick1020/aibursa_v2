@@ -35,3 +35,4 @@ static/bt_*
 # Secrets (folosește .env.example în loc)
 .env
 *.pyc
+repo_manifest.txt
