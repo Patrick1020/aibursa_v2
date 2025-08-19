@@ -1,6 +1,6 @@
-=== Repo Manifest 2025-08-19T04:46:40 ===
+=== Repo Manifest 2025-08-19T05:06:22 ===
 branch: main
-commit: f2459b1
+commit: 5d40265
 
 --- GIT STATUS ---
  M repo_manifest.txt
@@ -17504,6 +17504,12 @@ C:.
 |   |           
 |   +---ml
 |   |   +---artifacts
+|   |   +---calibration
+|   |   |   |   frozen_calibrator.py
+|   |   |   |   
+|   |   |   \---__pycache__
+|   |   |           frozen_calibrator.cpython-310.pyc
+|   |   |           
 |   |   +---data
 |   |   |   |   synth.py
 |   |   |   |   
@@ -17600,7 +17606,7 @@ C:.
         test_predictions.py
         
 
---- HEADS (primele ~200 linii) ---
+--- HEADS (~200 linii) ---
 
 ----- .gitignore -----
 # Environment (DO NOT COMMIT)
@@ -17675,10 +17681,10 @@ loguru==0.7.2
 alembic==1.13.2
 pandas==2.2.2
 numpy>=1.26.0
-scikit-learn>=1.4.0
 joblib>=1.3.0
 yfinance>=0.2.40
 httpx>=0.27.0
+scikit-learn>=1.6.0
 
 ----- README.md -----
 # aibursa_v2
