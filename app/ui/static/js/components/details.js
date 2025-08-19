@@ -2,7 +2,7 @@ import { openModal } from "./modal.js";
 import { renderSparkline } from "./sparkline.js";
 import { fmt } from "../core/utils.js";
 import { getPredictionDetails } from "../core/api.js";
-import { toast } from "./../components/toast.js";
+import { toast } from "./toast.js";
 
 export async function openDetails(ticker){
   try {

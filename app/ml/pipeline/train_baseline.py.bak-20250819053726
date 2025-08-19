@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 import os, json
 from dataclasses import dataclass
 import numpy as np
@@ -60,7 +60,7 @@ def train_on_dataframe(df_raw: pd.DataFrame, cfg: TrainConfig):
     base_cls = GradientBoostingClassifier(random_state=cfg.random_state)
     base_cls.fit(Xtr, ytr_c)
     # calibrare probabilități (mai corect pentru „probability_pct”)
-    # înlocuiește CalibratedClassifierCV(..., cv=5) cu wrapperul uniform
+    # înlocuiește CalibratedClassifierCV(..., cv="prefit") cu wrapperul uniform
     cls = calibrate_prefit_estimator(base_cls, Xva, yva_c, method="isotonic")
     cls.fit(Xva, yva_c)
 
@@ -98,4 +98,3 @@ def train_on_dataframe(df_raw: pd.DataFrame, cfg: TrainConfig):
         json.dump(metrics, f, indent=2)
 
     return metrics
-

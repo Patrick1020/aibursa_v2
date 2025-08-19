@@ -30,7 +30,7 @@ class PlattPrefit:
 
 def calibrate_prefit_estimator(estimator, X_valid, y_valid, method: str = "sigmoid"):
     """
-    Dacă sklearn ≥1.6: CalibratedClassifierCV(FrozenEstimator(estimator)), fără cv=5.
+    Dacă sklearn ≥1.6: CalibratedClassifierCV(FrozenEstimator(estimator)), fără cv='prefit'.
     Altfel: Platt pe probabilități brute (predict_proba -> clasa 1).
     """
     if HAS_FROZEN:
@@ -40,4 +40,3 @@ def calibrate_prefit_estimator(estimator, X_valid, y_valid, method: str = "sigmo
     else:
         probs_valid = estimator.predict_proba(X_valid)[:, 1]
         return PlattPrefit().fit(probs_valid, y_valid)
-

@@ -1,4 +1,4 @@
-﻿export async function getPredictions() {
+export async function getPredictions() {
   const r = await fetch("/api/predictions");
   if (!r.ok) {
     const t = await r.text().catch(()=> "");
@@ -21,7 +21,7 @@ export async function createPrediction(ticker, horizon_days=7) {
 }
 
 export async function getQuotes(tickers) {
-  const uniq = [.....new Set(tickers.map(t => t.toUpperCase()))];
+  const uniq = [...new Set(tickers.map(t => t.toUpperCase()))];
   if (!uniq.length) return {};
   const r = await fetch(`/api/market/quotes?tickers=${encodeURIComponent(uniq.join(","))}`);
   if (!r.ok) {
@@ -43,4 +43,3 @@ export async function getPredictionDetails(ticker, { period="6mo", interval="1d"
   }
   return r.json();
 }
-

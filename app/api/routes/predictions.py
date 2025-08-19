@@ -43,6 +43,7 @@ class PredictionDetailsResponse(BaseModel):
     candles: List[CandleOut] = []
 
 
+
 def get_db():
     db = SessionLocal()
     try:

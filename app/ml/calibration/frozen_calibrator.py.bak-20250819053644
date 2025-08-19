@@ -1,0 +1,65 @@
+from __future__ import annotations
+import numpy as np
+
+try:
+    from sklearn.calibration import CalibratedClassifierCV  # has FrozenEstimator in 1.6+
+    from sklearn.calibration import _SigmoidCalibration
+    HAS_SKLEARN = True
+except Exception:  # pragma: no cover
+    HAS_SKLEARN = False
+
+class _PlattPrefit:
+    """Platt scaling prefit (sigmoid) pe proba clasa 1."""
+    def __init__(self, a: float, b: float):
+        self.a, self.b = a, b
+    def predict_proba_from_scores(self, scores: np.ndarray) -> np.ndarray:
+        # scores = p_raw (prob clasa 1) sau scoruri logit; aici tratăm ca p_raw
+        p = 1.0 / (1.0 + np.exp(self.a * scores + self.b))
+        p = np.clip(p, 1e-6, 1 - 1e-6)
+        return np.c_[1 - p, p]
+
+def _fit_platt_from_probs(p_raw: np.ndarray, y: np.ndarray) -> _PlattPrefit:
+    # Folosim implementarea scikit pentru a obține (a, b), dar lucrăm pe p_raw
+    # Mapăm p_raw în scoruri logit stabili numeric
+    eps = 1e-6
+    p = np.clip(p_raw, eps, 1 - eps)
+    logits = np.log(p / (1 - p))
+
+    # Folosim _SigmoidCalibration pe logits
+    sc = _SigmoidCalibration()
+    sc.fit(logits.reshape(-1,1), y)
+    a, b = sc.a_, sc.b_
+    return _PlattPrefit(a, b)
+
+class _ProbaOnXWrapper:
+    """Asigură interfață predict_proba(X) indiferent de tipul calibratorului."""
+    def __init__(self, base_estimator, calibrator, mode: str):
+        self.base_estimator = base_estimator
+        self.calibrator = calibrator
+        self.mode = mode  # "sklearn" sau "platt"
+    def predict_proba(self, X):
+        if self.mode == "sklearn":
+            return self.calibrator.predict_proba(X)
+        # fallback platt: rulăm baza, extragem p_raw=[:,1], apoi calibrăm
+        p_raw = self.base_estimator.predict_proba(X)[:, 1]
+        return self.calibrator.predict_proba_from_scores(p_raw)
+
+def calibrate_prefit_estimator(base_estimator, X_valid, y_valid, method: str = "isotonic"):
+    """
+    Întoarce un obiect cu predict_proba(X) stabil:
+    - dacă scikit-learn modern este disponibil: CalibratedClassifierCV(FrozenEstimator(estimator))
+    - altfel: wrapper care aplică Platt pe proba brută a estimatorului
+    """
+    if HAS_SKLEARN:
+        try:
+            cls = CalibratedClassifierCV(base_estimator, method=method, cv="prefit")
+            cls.fit(X_valid, y_valid)
+            return _ProbaOnXWrapper(base_estimator, cls, mode="sklearn")
+        except Exception:
+            # cade pe drum? revenim pe Platt
+            pass
+
+    # fallback: Platt pe p_raw
+    p_raw = base_estimator.predict_proba(X_valid)[:, 1]
+    platt = _fit_platt_from_probs(p_raw, np.asarray(y_valid).astype(int))
+    return _ProbaOnXWrapper(base_estimator, platt, mode="platt")
